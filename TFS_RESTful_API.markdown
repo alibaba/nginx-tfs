@@ -1,6 +1,6 @@
 #TFS RESTful API
 
-注：API语法描述中的**粗体**为API语法规定的保留关键字部分，*斜体*为用户输入部分
+注：API语法描述中的<b>粗体</b>为API语法规定的保留关键字部分，<i>斜体</i>为用户输入部分
 
 ##原生TFS
 
@@ -12,15 +12,15 @@
 
 ####语法
 
->POST /**v1**/*appkey* HTTP/1.1
+>POST /<b>v1</b>/<i>appkey</i> HTTP/1.1
 
->Host: *10.0.0.1:7500*
+>Host: <i>10.0.0.1:7500</i>
 
->Content-Length: *length*
+>Content-Length: <i>length</i>
 
->Date: *date*
+>Date: <i>date</i>
 
-其中*appkey*是在RcServer的数据库中配置的应用的标识符，若无使用RcServer，使用**tfs**即可
+其中<i>appkey</i>是在RcServer的数据库中配置的应用的标识符，若无使用RcServer，使用<b>tfs</b>即可
 
 ####请求参数
 
@@ -138,15 +138,15 @@ Connection: keep-alive
 
 ####语法
 
->PUT /**v1**/*appkey*/*TfsFileName* HTTP/1.1
+>PUT /<b>v1</b>/<i>appkey</i>/<i>TfsFileName</i> HTTP/1.1
 
->Host: *10.0.0.1:7500*
+>Host: <i>10.0.0.1:7500</i>
 
->Content-Length: *length*
+>Content-Length: <i>length</i>
 
->Date: *date*
+>Date: <i>date</i>
 
-其中*appkey*是在RcServer的数据库中配置的应用的标识符，若无使用RcServer，使用**tfs**即可
+其中<i>appkey</i>是在RcServer的数据库中配置的应用的标识符，若无使用RcServer，使用<b>tfs</b>即可
 
 ####请求参数
 
@@ -233,13 +233,13 @@ Connection: keep-alive
 此API用于从一个TFS文件中读取数据
 
 ####语法
->GET /**v1**/*appkey*/*TfsFileName* HTTP/1.1
+>GET /<b>v1</b>/<i>appkey</i>/<i>TfsFileName</i> HTTP/1.1
 
->Host: *10.0.0.1:7500*
+>Host: <i>10.0.0.1:7500</i>
 
->Date: *date*
+>Date: <i>date</i>
 
-其中*appkey*是在RcServer的数据库中配置的应用的标识符，若无使用RcServer，使用**tfs**即可
+其中<i>appkey</i>是在RcServer的数据库中配置的应用的标识符，若无使用RcServer，使用<b>tfs</b>即可
 
 TfsFileName是要读取的TFS文件的文件名，可带后缀
 
@@ -353,13 +353,13 @@ Connection: keep-alive
 
 ####语法
 
->DELETE /**v1**/*appkey*/*TfsFileName* HTTP/1.1
+>DELETE /<b>v1</b>/<i>appkey</i>/<i>TfsFileName</i> HTTP/1.1
 
->Host: *10.0.0.1:7500*
+>Host: <i>10.0.0.1:7500</i>
 
->Date: *date*
+>Date: <i>date</i>
 
-其中*appkey*是在RcServer的数据库中配置的应用的标识符，若无使用RcServer，使用**tfs**即可
+其中<i>appkey</i>是在RcServer的数据库中配置的应用的标识符，若无使用RcServer，使用<b>tfs</b>即可
 
 TfsFileName是要读取的TFS文件的文件名，可带后缀
 
@@ -455,13 +455,13 @@ Connection: keep-alive
 
 ####语法
 
->GET /**v1**/*appkey*/**metadata**/*TfsFileName* HTTP/1.1
+>GET /<b>v1</b>/<i>appkey</i>/<b>metadata</b>/<i>TfsFileName</i> HTTP/1.1
 
->Host: *10.0.0.1:7500*
+>Host: <i>10.0.0.1:7500</i>
 
->Date: *date*
+>Date: <i>date</i>
 
-其中*appkey*是在RcServer的数据库中配置的应用的标识符，若无使用RcServer，使用**tfs**即可
+其中<i>appkey</i>是在RcServer的数据库中配置的应用的标识符，若无使用RcServer，使用<b>tfs</b>即可
 
 TfsFileName是要读取的TFS文件的文件名，可带后缀
 
@@ -600,13 +600,13 @@ Connection: keep-alive
 
 ####语法
 
->GET /**v2**/*appkey*/*appid*  HTTP/1.1
+>GET /<b>v2</b>/<i>appkey</i>/<i>appid</i>  HTTP/1.1
 
->Host: *10.0.0.1:7500*
+>Host: <i>10.0.0.1:7500</i>
 
->Date: *date*
+>Date: <i>date</i>
 
-其中*appkey*是在RcServer的数据库中配置的应用的标识符
+其中<i>appkey</i>是在RcServer的数据库中配置的应用的标识符
 
 ####请求参数
 
@@ -680,15 +680,15 @@ Connection: keep-alive
 
 ####语法
 
->POST /**v2**/*appkey*/*appid*/*uid*/**dir**/*dir_name*  HTTP/1.1
+>POST /<b>v2</b>/<i>appkey</i>/<i>appid</i>/<i>uid</i>/<b>dir</b>/<i>dir_name</i>  HTTP/1.1
 
->Host: *10.0.0.1:7500*
+>Host: <i>10.0.0.1:7500</i>
 
->Date: *date*
+>Date: <i>date</i>
 
-其中*appkey*是在RcServer的数据库中配置的应用的标识符
+其中<i>appkey</i>是在RcServer的数据库中配置的应用的标识符
 
-appid是应用的appkey对应的appid，可通过**获取APPID**的API获得
+appid是应用的appkey对应的appid，可通过<b>获取APPID</b>的API获得
 
 uid是用户id，每个appid和uid的组合对应一个独立的名字空间，可以认为是appid对应的名字空间下的子空间
 
@@ -770,15 +770,15 @@ Connection: keep-alive
 
 ####语法
 
->DELETE /**v2**/*appkey*/*appid*/*uid*/**dir**/*dir_name* HTTP/1.1
+>DELETE /<b>v2</b>/<i>appkey</i>/<i>appid</i>/<i>uid</i>/<b>dir</b>/<i>dir_name</i> HTTP/1.1
 
->Host: *10.0.0.1:7500*
+>Host: <i>10.0.0.1:7500</i>
 
->Date: *date*
+>Date: <i>date</i>
 
-其中*appkey*是在RcServer的数据库中配置的应用的标识符
+其中<i>appkey</i>是在RcServer的数据库中配置的应用的标识符
 
-appid是应用的appkey对应的appid，可通过**获取APPID**的API获得
+appid是应用的appkey对应的appid，可通过<b>获取APPID</b>的API获得
 
 uid是用户id，每个appid和uid的组合对应一个独立的名字空间，可以认为是appid对应的名字空间下的子空间
 
@@ -851,17 +851,17 @@ Connection: keep-alive
 
 ####语法
 
->POST /**v2**/*appkey*/*appid*/*uid*/**dir**/*dest_dir_name* HTTP/1.1
+>POST /<b>v2</b>/<i>appkey</i>/<i>appid</i>/<i>uid</i>/<b>dir</b>/<i>dest_dir_name</i> HTTP/1.1
 
->Host: *10.0.0.1:7500*
+>Host: <i>10.0.0.1:7500</i>
 
->Date: *date*
+>Date: <i>date</i>
 
->x-ali-move-source: /*src_dir_name*
+>x-ali-move-source: /<i>src_dir_name</i>
 
-其中*appkey*是在RcServer的数据库中配置的应用的标识符
+其中<i>appkey</i>是在RcServer的数据库中配置的应用的标识符
 
-appid是应用的appkey对应的appid，可通过**获取APPID**的API获得
+appid是应用的appkey对应的appid，可通过<b>获取APPID</b>的API获得
 
 uid是用户id，每个appid和uid的组合对应一个独立的名字空间，可以认为是appid对应的名字空间下的子空间
 
@@ -946,15 +946,15 @@ Connection: keep-alive
 
 ####语法
 
->GET /**v2**/*appkey*/**metadata**/*appid*/*uid*/**dir**/*dir_name*  HTTP/1.1
+>GET /<b>v2</b>/<i>appkey</i>/<b>metadata</b>/<i>appid</i>/<i>uid</i>/<b>dir</b>/<i>dir_name</i>  HTTP/1.1
 
->Host: *10.0.0.1:7500*
+>Host: <i>10.0.0.1:7500</i>
 
->Date: *date*
+>Date: <i>date</i>
 
-其中*appkey*是在RcServer的数据库中配置的应用的标识符
+其中<i>appkey</i>是在RcServer的数据库中配置的应用的标识符
 
-appid是应用的appkey对应的appid，可通过**获取APPID**的API获得
+appid是应用的appkey对应的appid，可通过<b>获取APPID</b>的API获得
 
 uid是用户id，每个appid和uid的组合对应一个独立的名字空间，可以认为是appid对应的名字空间下的子空间
 
@@ -1090,15 +1090,15 @@ Connection: keep-alive
 
 ####语法
 
->HEAD /**v2**/*appkey*/*appid*/*uid*/**dir**/*dir_name*  HTTP/1.1
+>HEAD /<b>v2</b>/<i>appkey</i>/<i>appid</i>/<i>uid</i>/<b>dir</b>/<i>dir_name</i>  HTTP/1.1
 
->Host: *10.0.0.1:7500*
+>Host: <i>10.0.0.1:7500</i>
 
->Date: *date*
+>Date: <i>date</i>
 
-其中*appkey*是在RcServer的数据库中配置的应用的标识符
+其中<i>appkey</i>是在RcServer的数据库中配置的应用的标识符
 
-appid是应用的appkey对应的appid，可通过**获取APPID**的API获得
+appid是应用的appkey对应的appid，可通过<b>获取APPID</b>的API获得
 
 uid是用户id，每个appid和uid的组合对应一个独立的名字空间，可以认为是appid对应的名字空间下的子空间
 
@@ -1162,15 +1162,15 @@ Connection: keep-alive
 此API用于创建一个文件
 
 ####语法
->POST /**v2**/*appkey*/*appid*/*uid*/**file**/*file_name*  HTTP/1.1
+>POST /<b>v2</b>/<i>appkey</i>/<i>appid</i>/<i>uid</i>/<b>file</b>/<i>file_name</i>  HTTP/1.1
 
->Host: *10.0.0.1:7500*
+>Host: <i>10.0.0.1:7500</i>
 
->Date: *date*
+>Date: <i>date</i>
 
-其中*appkey*是在RcServer的数据库中配置的应用的标识符
+其中<i>appkey</i>是在RcServer的数据库中配置的应用的标识符
 
-appid是应用的appkey对应的appid，可通过**获取APPID**的API获得
+appid是应用的appkey对应的appid，可通过<b>获取APPID</b>的API获得
 
 uid是用户id，每个appid和uid的组合对应一个独立的名字空间，可以认为是appid对应的名字空间下的子空间
 
@@ -1258,17 +1258,17 @@ Connection: keep-alive
 
 ####语法
 
->PUT /**v2**/*appkey*/*appid*/*uid*/**file**/*file_name*  HTTP/1.1
+>PUT /<b>v2</b>/<i>appkey</i>/<i>appid</i>/<i>uid</i>/<b>file</b>/<i>file_name</i>  HTTP/1.1
 
->Host: *10.0.0.1:7500*
+>Host: <i>10.0.0.1:7500</i>
 
->Content-Length: *length*
+>Content-Length: <i>length</i>
 
->Date: *date*
+>Date: <i>date</i>
 
-其中*appkey*是在RcServer的数据库中配置的应用的标识符
+其中<i>appkey</i>是在RcServer的数据库中配置的应用的标识符
 
-appid是应用的appkey对应的appid，可通过**获取APPID**的API获得
+appid是应用的appkey对应的appid，可通过<b>获取APPID</b>的API获得
 
 uid是用户id，每个appid和uid的组合对应一个独立的名字空间，可以认为是appid对应的名字空间下的子空间
 
@@ -1357,15 +1357,15 @@ Connection: keep-alive
 
 ####语法
 
->GET /**v2**/*appkey*/*appid*/*uid*/**file**/*file_name*  HTTP/1.1
+>GET /<b>v2</b>/<i>appkey</i>/<i>appid</i>/<i>uid</i>/<b>file</b>/<i>file_name</i>  HTTP/1.1
 
->Host: *10.0.0.1:7500*
+>Host: <i>10.0.0.1:7500</i>
 
->Date: *date*
+>Date: <i>date</i>
 
-其中*appkey*是在RcServer的数据库中配置的应用的标识符
+其中<i>appkey</i>是在RcServer的数据库中配置的应用的标识符
 
-appid是应用的appkey对应的appid，可通过**获取APPID**的API获得
+appid是应用的appkey对应的appid，可通过<b>获取APPID</b>的API获得
 
 uid是用户id，每个appid和uid的组合对应一个独立的名字空间，可以认为是appid对应的名字空间下的子空间
 
@@ -1454,15 +1454,15 @@ Connection: keep-alive
 
 ####语法
 
->DELETE /**v2**/*appkey*/*appid*/*uid*/**file**/*file_name*  HTTP/1.1
+>DELETE /<b>v2</b>/<i>appkey</i>/<i>appid</i>/<i>uid</i>/<b>file</b>/<i>file_name</i>  HTTP/1.1
 
->Host: *10.0.0.1:7500*
+>Host: <i>10.0.0.1:7500</i>
 
->Date: *date*
+>Date: <i>date</i>
 
-其中*appkey*是在RcServer的数据库中配置的应用的标识符
+其中<i>appkey</i>是在RcServer的数据库中配置的应用的标识符
 
-appid是应用的appkey对应的appid，可通过**获取APPID**的API获得
+appid是应用的appkey对应的appid，可通过<b>获取APPID</b>的API获得
 
 uid是用户id，每个appid和uid的组合对应一个独立的名字空间，可以认为是appid对应的名字空间下的子空间
 
@@ -1531,17 +1531,17 @@ Connection: keep-alive
 
 ####语法
 
->POST /**v2**/*appkey*/*appid*/*uid*/**file**/*dest_file_name*  HTTP/1.1
+>POST /<b>v2</b>/<i>appkey</i>/<i>appid</i>/<i>uid</i>/<b>file</b>/<i>dest_file_name</i>  HTTP/1.1
 
->Host: *10.0.0.1:7500*
+>Host: <i>10.0.0.1:7500</i>
 
->Date: *date*
+>Date: <i>date</i>
 
->x-ali-move-source: /*src_file_name*
+>x-ali-move-source: /<i>src_file_name</i>
 
-其中*appkey*是在RcServer的数据库中配置的应用的标识符
+其中<i>appkey</i>是在RcServer的数据库中配置的应用的标识符
 
-appid是应用的appkey对应的appid，可通过**获取APPID**的API获得
+appid是应用的appkey对应的appid，可通过<b>获取APPID</b>的API获得
 
 uid是用户id，每个appid和uid的组合对应一个独立的名字空间，可以认为是appid对应的名字空间下的子空间
 
@@ -1622,15 +1622,15 @@ Connection: keep-alive
 
 ####语法
 
->GET /**v2**/*appkey*/**metadata**/*appid*/*uid*/**file**/*file_name*  HTTP/1.1
+>GET /<b>v2</b>/<i>appkey</i>/<b>metadata</b>/<i>appid</i>/<i>uid</i>/<b>file</b>/<i>file_name</i>  HTTP/1.1
 
->Host: *10.0.0.1:7500*
+>Host: <i>10.0.0.1:7500</i>
 
->Date: *date*
+>Date: <i>date</i>
 
-其中*appkey*是在RcServer的数据库中配置的应用的标识符
+其中<i>appkey</i>是在RcServer的数据库中配置的应用的标识符
 
-appid是应用的appkey对应的appid，可通过**获取APPID**的API获得
+appid是应用的appkey对应的appid，可通过<b>获取APPID</b>的API获得
 
 uid是用户id，每个appid和uid的组合对应一个独立的名字空间，可以认为是appid对应的名字空间下的子空间
 
@@ -1744,15 +1744,15 @@ Connection: keep-alive
 
 ####语法
 
->HEAD /**v2**/*appkey*/*appid*/*uid*/**file**/*file_name*  HTTP/1.1
+>HEAD /<b>v2</b>/<i>appkey</i>/<i>appid</i>/<i>uid</i>/<b>file</b>/<i>file_name</i>  HTTP/1.1
 
->Host: *10.0.0.1:7500*
+>Host: <i>10.0.0.1:7500</i>
 
->Date: *date*
+>Date: <i>date</i>
 
-其中*appkey*是在RcServer的数据库中配置的应用的标识符
+其中<i>appkey</i>是在RcServer的数据库中配置的应用的标识符
 
-appid是应用的appkey对应的appid，可通过**获取APPID**的API获得
+appid是应用的appkey对应的appid，可通过<b>获取APPID</b>的API获得
 
 uid是用户id，每个appid和uid的组合对应一个独立的名字空间，可以认为是appid对应的名字空间下的子空间
 

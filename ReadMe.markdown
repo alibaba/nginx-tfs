@@ -31,7 +31,7 @@ tfs_upstream
 
 **Context**： *http*
 
-指定后端TFS服务器的地址，当指令*tfs_enable_rcs*为*on*时为RcServer的地址，否则为NameServer的地址。此指令必须配置。例如:
+指定后端TFS服务器的地址，当指令<i>tfs_enable_rcs</i>为<i>on</i>时为RcServer的地址，否则为NameServer的地址。此指令必须配置。例如:
 
 	tfs_upstream 10.0.0.1:8108;
 
@@ -44,7 +44,7 @@ tfs\_enable\_rcs
 
 **Context**： *http, server*
 
-是否开启RcServer功能，此指令必须配置。如开启，则指令*tfs_upstream*指定的地址为RcServer的地址，否则为NameServer的地址。开启此指令需配置RcServer。如需使用自定义文件名功能请开启此指令，使用自定义文件名功能需额外配置MetaServer和RootServer。
+是否开启RcServer功能，此指令必须配置。如开启，则指令<i>tfs_upstream</i>指定的地址为RcServer的地址，否则为NameServer的地址。开启此指令需配置RcServer。如需使用自定义文件名功能请开启此指令，使用自定义文件名功能需额外配置MetaServer和RootServer。
 
 tfs_pass
 --------
@@ -96,7 +96,7 @@ tfs\_rcs\_zone
 
 **Context**： *http*
 
-配置TFS应用在RcServer的配置信息。若开启RcServer功能（配置了*tfs_enable_rcs on*），则必须配置此指令。配置此指令会在共享内存中缓存TFS应用在RcServer的配置信息，并可以通过指令*tfs_poll_rcs*来和RcServer进行keepalive以保证应用的配置信息的及时更新。例如：
+配置TFS应用在RcServer的配置信息。若开启RcServer功能（配置了<i>tfs_enable_rcs on</i>），则必须配置此指令。配置此指令会在共享内存中缓存TFS应用在RcServer的配置信息，并可以通过指令<i>tfs_poll_rcs</i>来和RcServer进行keepalive以保证应用的配置信息的及时更新。例如：
 
 	tfs_rcs_zone size=128M;
 
@@ -109,7 +109,7 @@ tfs\_poll\_rcs
 
 **Context**： *http*
 
-配置TFS应用和RcServer的keepalive，应用可通过此功能来和RcServer定期交互，以及时更新其配置信息。若开启RcServer功能（配置了*tfs_enable_rcs on*），则必须配置此指令。例如：
+配置TFS应用和RcServer的keepalive，应用可通过此功能来和RcServer定期交互，以及时更新其配置信息。若开启RcServer功能（配置了<i>tfs_enable_rcs on</i>），则必须配置此指令。例如：
 
 	tfs_poll_rcs lock_file=/path/to/nginx/logs/lk.file interval=10s enable=1;
 
@@ -122,7 +122,7 @@ tfs\_net\_device
 
 **Context**： *http, server*
 
-配置TFS模块使用的网卡。若开启RcServer功能（配置了*tfs_enable_rcs on*），则必须配置此指令。例如：
+配置TFS模块使用的网卡。若开启RcServer功能（配置了<i>tfs_enable_rcs on</i>），则必须配置此指令。例如：
 
 	tfs_net_device eth0;
 
@@ -189,7 +189,7 @@ tfs\_read\_timeout
 
 其他
 ----
-能支持上传文件大小决定于*client_max_body_size*指令配置的大小。
+能支持上传文件大小决定于<i>client_max_body_size</i>指令配置的大小。
 
 
 
