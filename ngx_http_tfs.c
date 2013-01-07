@@ -103,7 +103,7 @@ ngx_http_tfs_init(ngx_http_tfs_t *t)
     }
 
     if (t->r_ctx.action.code != NGX_HTTP_TFS_ACTION_KEEPALIVE) {
-        if (!t->main_conf->enable_rcs) {
+        if (!t->loc_conf->upstream->enable_rcs) {
             switch(t->r_ctx.action.code) {
             case NGX_HTTP_TFS_ACTION_REMOVE_FILE:
                 t->state = NGX_HTTP_TFS_STATE_REMOVE_GET_BLK_INFO;
@@ -122,8 +122,8 @@ ngx_http_tfs_init(ngx_http_tfs_t *t)
                 return NGX_ERROR;
             }
 
-            t->name_server_addr.ip = ((struct sockaddr_in*)(t->main_conf->ups_addr->sockaddr))->sin_addr.s_addr;
-            t->name_server_addr.port = ntohs(((struct sockaddr_in*)(t->main_conf->ups_addr->sockaddr))->sin_port);
+            t->name_server_addr.ip = ((struct sockaddr_in*)(t->loc_conf->upstream->ups_addr->sockaddr))->sin_addr.s_addr;
+            t->name_server_addr.port = ntohs(((struct sockaddr_in*)(t->loc_conf->upstream->ups_addr->sockaddr))->sin_port);
 
             /* skip get cluster id from ns */
             if (t->r_ctx.action.code == NGX_HTTP_TFS_ACTION_WRITE_FILE) {
@@ -186,7 +186,7 @@ ngx_http_tfs_init(ngx_http_tfs_t *t)
 
         } else {
             /* skip rc server */
-            rc_ctx = t->main_conf->rc_ctx;
+            rc_ctx = t->loc_conf->upstream->rc_ctx;
             ngx_shmtx_lock(&rc_ctx->shpool->mutex);
             rc_info = ngx_http_tfs_rcs_lookup(r, rc_ctx, t->r_ctx.appkey);
             ngx_shmtx_unlock(&rc_ctx->shpool->mutex);
@@ -742,7 +742,7 @@ ngx_http_tfs_finalize_state(ngx_http_tfs_t *t, ngx_int_t rc)
             ngx_log_error(NGX_LOG_INFO, t->srv_conf->log, 0,
                           "%d, %uL, %V, %V, %uD, %uL, %uL, %uL",
                           t->r_ctx.action.code,
-                          t->main_conf->enable_rcs ?
+                          t->loc_conf->upstream->enable_rcs ?
                           t->rc_info_node->app_id : NGX_HTTP_TFS_DEFAULT_APPID,
                           &t->file_name,
                           &t->r_ctx.file_suffix,
@@ -1737,8 +1737,6 @@ ngx_http_tfs_misc_ctx_init(ngx_http_tfs_t *t, ngx_http_tfs_rcs_info_t *rc_info)
     ngx_http_tfs_logical_cluster_t          *logical_cluster;
     ngx_http_tfs_physical_cluster_t         *physical_cluster;
 
-    rc = NGX_ERROR;
-
     /* raw tfs */
     if (t->r_ctx.version == 1) {
         switch (t->r_ctx.action.code) {
@@ -2113,6 +2111,10 @@ ngx_http_tfs_batch_process_end(ngx_http_tfs_t *t)
                 /* reuse the first segment */
                 t->send_body = t->meta_segment_data;
                 rc = ngx_http_tfs_get_segment_for_write(t);
+                if (rc == NGX_ERROR) {
+                    ngx_http_tfs_finalize_state(t, NGX_ERROR);
+                    return NGX_ERROR;
+                }
                 t->is_process_meta_seg = NGX_HTTP_TFS_YES;
             }
 

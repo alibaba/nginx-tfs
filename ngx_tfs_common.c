@@ -351,7 +351,6 @@ ngx_http_tfs_raw_fsname_hash(const u_char *str, const int32_t len)
     int32_t h, i;
 
     h = 0;
-    i = 0;
 
     if (str == NULL || len <=0) {
         return 0;
