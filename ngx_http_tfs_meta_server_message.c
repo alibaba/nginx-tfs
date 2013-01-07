@@ -289,12 +289,10 @@ ngx_http_tfs_create_read_meta_message(ngx_http_tfs_t *t, int64_t req_offset, uin
 
     if (req_frag_count > max_frag_count) {
         *((uint64_t *) p) = (max_frag_count - 1) * NGX_HTTP_TFS_MAX_FRAGMENT_SIZE;
-        p += sizeof(uint64_t);
         t->has_split_frag = NGX_HTTP_TFS_YES;
 
     } else {
         *((uint64_t *) p) = req_size;
-        p += sizeof(uint64_t);
         t->has_split_frag = NGX_HTTP_TFS_NO;
     }
 
@@ -437,7 +435,6 @@ ngx_http_tfs_create_ls_message(ngx_http_tfs_t *t)
     p += sizeof(uint8_t);
 
     *((uint64_t *)p) = t->loc_conf->meta_server_table.version;
-    p += sizeof(uint64_t);
 
     req->header.crc = ngx_http_tfs_crc(NGX_HTTP_TFS_PACKET_FLAG,
                                        (const char *) (&req->header + 1),
@@ -554,7 +551,6 @@ ngx_http_tfs_parse_read_meta_message(ngx_http_tfs_t *t)
     p = tp->body_buffer.pos + sizeof(ngx_http_tfs_ms_read_response_t);
     fmi = (ngx_http_tfs_meta_frag_meta_info_t *) p;
 
-    curr_length = 0;
     for (i = 0; i < count; i++, fmi++) {
         t->file.segment_data[i].segment_info.block_id = fmi->block_id;
         t->file.segment_data[i].segment_info.file_id = fmi->file_id;

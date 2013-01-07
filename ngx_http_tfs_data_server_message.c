@@ -372,7 +372,6 @@ ngx_http_tfs_create_write_message(ngx_http_tfs_t *t,
     p += sizeof(uint64_t);
     /* lease id */
     *((uint64_t *) p) = block_info->lease_id;
-    p += sizeof(uint64_t);
     b->last += size;
 
     req->length = segment_data->oper_size;
