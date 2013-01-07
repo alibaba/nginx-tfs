@@ -29,9 +29,9 @@ ngx_http_tfs_peer_init(ngx_http_tfs_t *t)
     }
 
     /* rc server */
-    if (t->main_conf->enable_rcs) {
-        t->tfs_peer_servers[NGX_HTTP_TFS_RC_SERVER].peer.sockaddr = t->main_conf->ups_addr->sockaddr;
-        t->tfs_peer_servers[NGX_HTTP_TFS_RC_SERVER].peer.socklen = t->main_conf->ups_addr->socklen;
+    if (t->loc_conf->upstream->enable_rcs) {
+        t->tfs_peer_servers[NGX_HTTP_TFS_RC_SERVER].peer.sockaddr = t->loc_conf->upstream->ups_addr->sockaddr;
+        t->tfs_peer_servers[NGX_HTTP_TFS_RC_SERVER].peer.socklen = t->loc_conf->upstream->ups_addr->socklen;
         t->tfs_peer_servers[NGX_HTTP_TFS_RC_SERVER].peer.log = t->log;
         t->tfs_peer_servers[NGX_HTTP_TFS_RC_SERVER].peer.name = &rcs_name;
         t->tfs_peer_servers[NGX_HTTP_TFS_RC_SERVER].peer.data = conn_pool;
@@ -43,8 +43,8 @@ ngx_http_tfs_peer_init(ngx_http_tfs_t *t)
                     ntohs(((struct sockaddr_in*)(t->tfs_peer_servers[NGX_HTTP_TFS_RC_SERVER].peer.sockaddr))->sin_port));
 
     } else {
-        t->tfs_peer_servers[NGX_HTTP_TFS_NAME_SERVER].peer.sockaddr = t->main_conf->ups_addr->sockaddr;
-        t->tfs_peer_servers[NGX_HTTP_TFS_NAME_SERVER].peer.socklen = t->main_conf->ups_addr->socklen;
+        t->tfs_peer_servers[NGX_HTTP_TFS_NAME_SERVER].peer.sockaddr = t->loc_conf->upstream->ups_addr->sockaddr;
+        t->tfs_peer_servers[NGX_HTTP_TFS_NAME_SERVER].peer.socklen = t->loc_conf->upstream->ups_addr->socklen;
         ngx_sprintf(t->tfs_peer_servers[NGX_HTTP_TFS_NAME_SERVER].peer_addr_text, "%s:%d",
                     inet_ntoa(((struct sockaddr_in*)(t->tfs_peer_servers[NGX_HTTP_TFS_NAME_SERVER].peer.sockaddr))->sin_addr),
                     ntohs(((struct sockaddr_in*)(t->tfs_peer_servers[NGX_HTTP_TFS_NAME_SERVER].peer.sockaddr))->sin_port));

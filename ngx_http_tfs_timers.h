@@ -14,8 +14,22 @@
 #include <ngx_http_tfs.h>
 
 
-ngx_int_t ngx_http_tfs_add_rcs_timers(ngx_cycle_t *cycle, ngx_http_tfs_main_conf_t *tmcf);
-ngx_int_t ngx_http_tfs_timers_init(ngx_cycle_t *cycle, u_char *lock_file);
+typedef struct {
+    ngx_atomic_t                   *ngx_http_tfs_kp_mutex_ptr;
+    ngx_shmtx_t                     ngx_http_tfs_kp_mutex;
+} ngx_http_tfs_timers_lock_t;
+
+
+typedef struct {
+    ngx_http_tfs_main_conf_t       *main_conf;
+    ngx_http_tfs_upstream_t        *upstream;
+    ngx_http_tfs_timers_lock_t     *lock;
+} ngx_http_tfs_timers_data_t;
+
+ngx_int_t  ngx_http_tfs_add_rcs_timers(ngx_cycle_t *cycle,
+    ngx_http_tfs_timers_data_t *data);
+ngx_http_tfs_timers_lock_t *ngx_http_tfs_timers_init(ngx_cycle_t *cycle,
+    u_char *lock_file);
 
 
 #endif  /* _NGX_HTTP_TFS_TIMERS_H_INCLUDED_ */

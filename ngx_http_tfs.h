@@ -95,6 +95,28 @@ typedef struct {
 
 
 typedef struct {
+    ngx_str_t                                lock_file;
+    ngx_msec_t                               rcs_interval;
+
+    ngx_flag_t                               rcs_kp_enable;
+    ngx_shm_zone_t                          *rcs_shm_zone;
+    ngx_http_tfs_rc_ctx_t                   *rc_ctx;
+
+    /* upstream name and port */
+    in_port_t                                port;
+    ngx_str_t                                host;
+    ngx_addr_t                              *ups_addr;
+
+    struct sockaddr_in                       local_addr;
+    u_char                                   local_addr_text[NGX_INET_ADDRSTRLEN];
+
+    ngx_flag_t                               enable_rcs;
+
+    unsigned                                 used:1;
+} ngx_http_tfs_upstream_t;
+
+
+typedef struct {
     ngx_msec_t                       timeout;
 
     size_t                           max_temp_file_size;
@@ -102,16 +124,14 @@ typedef struct {
 
     size_t                           busy_buffers_size_conf;
 
-    size_t                           rcs_zone_size;
-
     uint64_t                         meta_root_server;
     ngx_http_tfs_meta_table_t        meta_server_table;
+
+    ngx_http_tfs_upstream_t         *upstream;
 } ngx_http_tfs_loc_conf_t;
 
 
 typedef struct {
-    struct sockaddr_in               local_addr;
-    u_char                           local_addr_text[NGX_INET_ADDRSTRLEN];
 
     ngx_log_t                       *log;
 } ngx_http_tfs_srv_conf_t;
@@ -130,23 +150,17 @@ typedef struct {
     size_t                                   body_buffer_size;
     size_t                                   busy_buffers_size;
 
-    ngx_str_t                                lock_file;
-    ngx_msec_t                               rcs_interval;
-
-    ngx_shm_zone_t                          *rcs_shm_zone;
     ngx_shm_zone_t                          *block_cache_shm_zone;
 
     ngx_flag_t                               enable_remote_block_cache;
-    ngx_http_tfs_rc_ctx_t                   *rc_ctx;
     ngx_http_tfs_tair_instance_t             remote_block_cache_instance;
     ngx_http_tfs_local_block_cache_ctx_t    *local_block_cache_ctx;
 
-    ngx_flag_t                               rcs_kp_enable;
     ngx_http_connection_pool_t              *conn_pool;
 
-    ngx_addr_t                              *ups_addr;
-    ngx_flag_t                               enable_rcs;
     uint32_t                                 cluster_id;
+
+    ngx_array_t                              upstreams;
 } ngx_http_tfs_main_conf_t;
 
 
