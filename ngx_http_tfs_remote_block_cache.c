@@ -195,7 +195,7 @@ ngx_http_tfs_remote_block_cache_remove(ngx_http_tfs_remote_block_cache_ctx_t *ct
         return;
     }
 
-    rc = ngx_http_tfs_tair_delete_helper(ctx->tair_instance,
+    (void) ngx_http_tfs_tair_delete_helper(ctx->tair_instance,
                                          tmp_pool, log,
                                          &tair_keys,
                                          ngx_http_tfs_remote_block_cache_dummy_handler,

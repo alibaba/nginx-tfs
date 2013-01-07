@@ -109,10 +109,17 @@
 typedef struct ngx_http_tfs_s ngx_http_tfs_t;
 typedef struct ngx_http_tfs_peer_connection_s ngx_http_tfs_peer_connection_t;
 
+typedef struct ngx_http_tfs_main_conf_s ngx_http_tfs_main_conf_t;
+typedef struct ngx_http_tfs_loc_conf_s ngx_http_tfs_loc_conf_t;
+typedef struct ngx_http_tfs_upstream_s ngx_http_tfs_upstream_t;
+
 typedef struct ngx_http_tfs_inet_s ngx_http_tfs_inet_t;
 typedef struct ngx_http_tfs_meta_hh_s  ngx_http_tfs_meta_hh_t;
 
 typedef struct ngx_http_tfs_segment_data_s ngx_http_tfs_segment_data_t;
+
+typedef struct ngx_http_tfs_timers_lock_s ngx_http_tfs_timers_lock_t;
+typedef struct ngx_http_tfs_timers_data_s ngx_http_tfs_timers_data_t;
 
 typedef struct {
     uint64_t           size;

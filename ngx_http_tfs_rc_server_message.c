@@ -93,7 +93,7 @@ ngx_http_tfs_create_login_message(ngx_http_tfs_t *t)
     b->last += 1;
 
     /* app ip */
-    addr = &(t->srv_conf->local_addr);
+    addr = &(t->loc_conf->upstream->local_addr);
     ngx_memcpy(b->last, &(addr->sin_addr.s_addr), sizeof(uint64_t));
     b->last += sizeof(uint64_t);
 
@@ -125,7 +125,7 @@ ngx_http_tfs_create_keepalive_message(ngx_http_tfs_t *t)
     ngx_http_tfs_header_t          *header;
     ngx_http_tfs_rcs_info_t        *rc_info;
 
-    rc_ctx = t->main_conf->rc_ctx;
+    rc_ctx = t->loc_conf->upstream->rc_ctx;
     ll = NULL;
     cl = NULL;
 
@@ -196,9 +196,6 @@ ngx_http_tfs_create_keepalive_message(ngx_http_tfs_t *t)
 
     *((uint64_t *) p) = rc_info->modify_time;
 
-    /* modify_time is_logout stat_info */
-    p += sizeof(uint64_t) * 3 + sizeof(uint32_t) + sizeof(uint8_t);
-
     header->crc = ngx_http_tfs_crc(NGX_HTTP_TFS_PACKET_FLAG,
         (const char *) (header + 1), header->len);
 
@@ -211,7 +208,6 @@ ngx_http_tfs_create_keepalive_message(ngx_http_tfs_t *t)
         }
 
         cl->next = NULL;
-        ll = &cl->next;
         cl->buf = b;
 
     } else {
@@ -222,7 +218,6 @@ ngx_http_tfs_create_keepalive_message(ngx_http_tfs_t *t)
 
         (*ll)->next = NULL;
         (*ll)->buf = b;
-        ll = &((*ll)->next);
     }
 
     return cl;
@@ -246,7 +241,7 @@ ngx_http_tfs_parse_login_message(ngx_http_tfs_t *t)
     header = (ngx_http_tfs_header_t *) t->header;
     tp = t->tfs_peer;
     type = header->type;
-    rc_ctx = t->main_conf->rc_ctx;
+    rc_ctx = t->loc_conf->upstream->rc_ctx;
 
     switch (type) {
     case NGX_HTTP_TFS_STATUS_MESSAGE:
@@ -314,7 +309,7 @@ ngx_http_tfs_parse_keepalive_message(ngx_http_tfs_t *t)
                       "rc keepalive, update flag: %d", update);
     }
 
-    rc_ctx = t->main_conf->rc_ctx;
+    rc_ctx = t->loc_conf->upstream->rc_ctx;
 
     queue = &rc_ctx->sh->kp_queue;
     if (ngx_queue_empty(queue)) {

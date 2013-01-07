@@ -443,7 +443,7 @@ ngx_http_tfs_process_rcs(ngx_http_tfs_t *t)
 
     tp = t->tfs_peer;
     b = &tp->body_buffer;
-    rc_ctx = t->main_conf->rc_ctx;
+    rc_ctx = t->loc_conf->upstream->rc_ctx;
 
     rc = ngx_http_tfs_rc_server_parse_message(t);
 
@@ -550,7 +550,7 @@ ngx_http_tfs_process_ns(ngx_http_tfs_t *t)
         switch(t->state) {
         case NGX_HTTP_TFS_STATE_WRITE_CLUSTER_ID_NS:
             /* save cluster id */
-            if (t->main_conf->enable_rcs) {
+            if (t->loc_conf->upstream->enable_rcs) {
                 rc_info = t->rc_info_node;
                 logical_cluster = &rc_info->logical_clusters[t->logical_cluster_index];
                 physical_cluster = &logical_cluster->rw_clusters[t->rw_cluster_index];
@@ -840,14 +840,12 @@ ngx_http_tfs_process_ds(ngx_http_tfs_t *t)
     ngx_buf_t                                *b;
     ngx_chain_t                              *cl, **ll;
     ngx_http_request_t                       *r;
-    ngx_peer_connection_t                    *p;
     ngx_http_tfs_header_t                    *header;
     ngx_http_tfs_segment_data_t              *segment_data;
     ngx_http_tfs_peer_connection_t           *tp;
 
     header = (ngx_http_tfs_header_t *) t->header;
     tp = t->tfs_peer;
-    p = &tp->peer;
     b = &tp->body_buffer;
 
     body_len = header->len;
@@ -1165,13 +1163,11 @@ ngx_http_tfs_process_ds_read(ngx_http_tfs_t *t)
     size_t                                    size;
     ngx_int_t                                 rc;
     ngx_buf_t                                *b;
-    ngx_peer_connection_t                    *p;
     ngx_http_tfs_segment_data_t              *segment_data;
     ngx_http_tfs_peer_connection_t           *tp;
     ngx_http_tfs_logical_cluster_t           *logical_cluster;
 
     tp = t->tfs_peer;
-    p = &tp->peer;
     b = &tp->body_buffer;
 
     size = ngx_buf_size(b);

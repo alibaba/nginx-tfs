@@ -127,9 +127,7 @@ ngx_http_tfs_raw_fsname_encode(u_char *input, u_char *output)
     uint32_t             value;
     ngx_uint_t           i, k;
 
-    i = 0;
     k = 0;
-    value = 0;
 
     if (input != NULL && output != NULL) {
         xor_mask(input, NGX_HTTP_TFS_FILE_NAME_EXCEPT_SUFFIX_LEN, buffer);
@@ -152,7 +150,6 @@ ngx_http_tfs_raw_fsname_decode(u_char *input, u_char *output)
     ngx_uint_t           i, k;
 
     k = 0;
-    value = 0;
 
     if (input != NULL && output != NULL) {
         for (i = 0; i < NGX_HTTP_TFS_FILE_NAME_LEN - 2; i += 4) {
