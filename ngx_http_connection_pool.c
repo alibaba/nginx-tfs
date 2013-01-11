@@ -46,7 +46,8 @@ ngx_http_connection_pool_init(ngx_pool_t *pool, ngx_uint_t max_cached,
     for (j = 0; j < bucket_count; j++) {
         ngx_queue_init(&conn_pool->cache[j]);
         ngx_queue_init(&conn_pool->free[j]);
-        cached = ngx_pcalloc(pool, sizeof(ngx_http_connection_pool_elt_t) * max_cached);
+        cached = ngx_pcalloc(pool,
+                           sizeof(ngx_http_connection_pool_elt_t) * max_cached);
         if (cached == NULL) {
             return NULL;
         }
@@ -309,7 +310,8 @@ ngx_http_connection_pool_check(ngx_http_connection_pool_t *conn_pool,
 {
     if (conn_pool->count != 0) {
         ngx_log_error(NGX_LOG_ERR, log, 0,
-                      "<== conn pool check ==> some keepalive peer do not free!, conn_pool count: %i",
+                      "<== conn pool check ==> "
+                      "some keepalive peer do not free!,  conn_pool count: %i",
                       conn_pool->count);
 
     } else {

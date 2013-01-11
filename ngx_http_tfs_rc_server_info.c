@@ -40,7 +40,8 @@ ngx_http_tfs_rcs_lookup(ngx_http_request_t *r, ngx_http_tfs_rc_ctx_t *ctx,
         /* hash == node->key */
 
         tr = (ngx_http_tfs_rcs_info_t *) &node->color;
-        rc = ngx_memn2cmp(appkey.data, tr->appkey.data, appkey.len, tr->appkey.len);
+        rc = ngx_memn2cmp(appkey.data, tr->appkey.data, appkey.len,
+                          tr->appkey.len);
 
         if (rc == 0) {
             ngx_queue_remove(&tr->queue);
@@ -60,6 +61,7 @@ void
 ngx_http_tfs_rc_server_destroy_node(ngx_http_tfs_rc_ctx_t *rc_ctx,
     ngx_http_tfs_rcs_info_t *rc_info_node)
 {
+    ngx_str_t                                *block_cache_info;
     ngx_uint_t                                i, j;
     ngx_rbtree_node_t                        *node;
     ngx_http_tfs_group_info_t                *group_info;
@@ -72,18 +74,23 @@ ngx_http_tfs_rc_server_destroy_node(ngx_http_tfs_rc_ctx_t *rc_ctx,
         return;
     }
 
-    if (rc_info_node->session_id.len <= 0 || rc_info_node->session_id.data == NULL) {
+    if (rc_info_node->session_id.len <= 0
+        || rc_info_node->session_id.data == NULL)
+    {
         goto last_free;
     }
 
     ngx_slab_free_locked(rc_ctx->shpool, rc_info_node->session_id.data);
     ngx_str_null(&rc_info_node->session_id);
 
-    if (rc_info_node->rc_servers_count <= 0 || rc_info_node->rc_servers == NULL) {
+    if (rc_info_node->rc_servers_count <= 0
+        || rc_info_node->rc_servers == NULL)
+    {
         goto last_free;
     }
 
     ngx_slab_free_locked(rc_ctx->shpool, rc_info_node->rc_servers);
+    block_cache_info = &rc_info_node->remote_block_cache_info;
     rc_info_node->rc_servers = NULL;
 
     logical_cluster = rc_info_node->logical_clusters;
@@ -95,7 +102,8 @@ ngx_http_tfs_rc_server_destroy_node(ngx_http_tfs_rc_ctx_t *rc_ctx,
                 if (dup_server_info->server[i].data == NULL) {
                     goto last_free;
                 }
-                ngx_slab_free_locked(rc_ctx->shpool, dup_server_info->server[i].data);
+                ngx_slab_free_locked(rc_ctx->shpool,
+                                     dup_server_info->server[i].data);
                 ngx_str_null(&dup_server_info->server[i]);
             }
         }
@@ -107,32 +115,39 @@ ngx_http_tfs_rc_server_destroy_node(ngx_http_tfs_rc_ctx_t *rc_ctx,
             {
                 goto last_free;
             }
-            ngx_slab_free_locked(rc_ctx->shpool, physical_cluster[j].cluster_id_text.data);
+            ngx_slab_free_locked(rc_ctx->shpool,
+                                 physical_cluster[j].cluster_id_text.data);
             ngx_str_null(&physical_cluster[j].cluster_id_text);
             physical_cluster[j].cluster_id = 0;
 
-            if (physical_cluster[j].ns_vip_text.len <= 0 || physical_cluster[j].ns_vip_text.data == NULL) {
+            if (physical_cluster[j].ns_vip_text.len <= 0
+                || physical_cluster[j].ns_vip_text.data == NULL)
+            {
                 goto last_free;
             }
-            ngx_slab_free_locked(rc_ctx->shpool, physical_cluster[j].ns_vip_text.data);
+            ngx_slab_free_locked(rc_ctx->shpool,
+                                 physical_cluster[j].ns_vip_text.data);
             ngx_str_null(&physical_cluster[j].ns_vip_text);
             physical_cluster++;
         }
         logical_cluster++;
     }
 
-    if (rc_info_node->remote_block_cache_info.len <= 0 || rc_info_node->remote_block_cache_info.data == NULL) {
+    if (block_cache_info->len <= 0 || block_cache_info->data == NULL)
+    {
         goto last_free;
     }
 
-    ngx_slab_free_locked(rc_ctx->shpool, rc_info_node->remote_block_cache_info.data);
+    ngx_slab_free_locked(rc_ctx->shpool, block_cache_info->data);
     ngx_str_null(&rc_info_node->remote_block_cache_info);
 
     cluster_group_info = rc_info_node->unlink_clusters;
     for (i = 0; i < rc_info_node->unlink_cluster_count; i++) {
         for (j = 0; j < cluster_group_info[i].info_count; j++) {
             group_info = &cluster_group_info[i].group_info[j];
-            if (group_info->ns_vip_text.len <= 0 || group_info->ns_vip_text.data == NULL) {
+            if (group_info->ns_vip_text.len <= 0
+                || group_info->ns_vip_text.data == NULL)
+            {
                 break;
             }
             ngx_slab_free_locked(rc_ctx->shpool, group_info->ns_vip_text.data);
@@ -250,7 +265,8 @@ ngx_http_tfs_rcs_rbtree_insert_value(ngx_rbtree_node_t *temp,
             trn = (ngx_http_tfs_rcs_info_t *) &node->color;
             trnt = (ngx_http_tfs_rcs_info_t *) &temp->color;
 
-            rc = ngx_memn2cmp(trn->appkey.data, trnt->appkey.data, trn->appkey.len, trn->appkey.len);
+            rc = ngx_memn2cmp(trn->appkey.data, trnt->appkey.data,
+                              trn->appkey.len, trn->appkey.len);
             if (rc < 0) {
                 p = &temp->left;
 

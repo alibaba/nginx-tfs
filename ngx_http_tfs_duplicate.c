@@ -9,13 +9,17 @@
 #include <ngx_http_tfs_data_server_message.h>
 #include <ngx_http_tfs_remote_block_cache.h>
 
-static void ngx_http_tfs_duplicate_get_handler(ngx_http_tair_key_value_t *kv, ngx_int_t rc, void *data);
+static void ngx_http_tfs_duplicate_get_handler(ngx_http_tair_key_value_t *kv,
+    ngx_int_t rc, void *data);
 static void ngx_http_tfs_duplicate_put_handler(ngx_int_t rc, void *data);
 static void ngx_http_tfs_duplicate_delete_handler(ngx_int_t rc, void *data);
-static void ngx_http_tfs_duplicate_callback(ngx_http_tfs_dedup_ctx_t *ctx, ngx_int_t rc);
+static void ngx_http_tfs_duplicate_callback(ngx_http_tfs_dedup_ctx_t *ctx,
+    ngx_int_t rc);
 
-ngx_int_t ngx_http_tfs_duplicate_check_suffix(ngx_str_t *tfs_name, ngx_str_t *suffix);
-ngx_int_t ngx_http_tfs_duplicate_check_filename(ngx_str_t *dup_name, ngx_http_tfs_raw_fsname_t* fsname);
+ngx_int_t ngx_http_tfs_duplicate_check_suffix(ngx_str_t *tfs_name,
+    ngx_str_t *suffix);
+ngx_int_t ngx_http_tfs_duplicate_check_filename(ngx_str_t *dup_name,
+    ngx_http_tfs_raw_fsname_t* fsname);
 
 
 ngx_int_t
@@ -47,14 +51,16 @@ ngx_http_tfs_get_duplicate_info(ngx_http_tfs_dedup_ctx_t *ctx,
 
     rc = ngx_http_tfs_tair_get_helper(ctx->tair_instance, pool, log,
                                       &tair_key,
-                                      ngx_http_tfs_duplicate_get_handler, ctx);
+                                      ngx_http_tfs_duplicate_get_handler,
+                                      ctx);
 
     return rc;
 }
 
 
 static void
-ngx_http_tfs_duplicate_get_handler(ngx_http_tair_key_value_t *kv, ngx_int_t rc, void *data)
+ngx_http_tfs_duplicate_get_handler(ngx_http_tair_key_value_t *kv, ngx_int_t rc,
+    void *data)
 {
     u_char                     *p;
     ngx_http_tfs_t             *t;
@@ -65,11 +71,14 @@ ngx_http_tfs_duplicate_get_handler(ngx_http_tair_key_value_t *kv, ngx_int_t rc, 
 
     if (rc == NGX_HTTP_ETAIR_SUCCESS) {
         p = kv->value->data;
-        if (p != NULL && kv->value->len > NGX_HTTP_TFS_DUPLICATE_VALUE_BASE_SIZE) {
+        if (p != NULL
+            && (kv->value->len > NGX_HTTP_TFS_DUPLICATE_VALUE_BASE_SIZE))
+        {
             ctx->file_ref_count = *(int32_t *)p;
             p += sizeof(int32_t);
             ctx->dup_file_name.len = kv->value->len - sizeof(int32_t);
-            ctx->dup_file_name.data = ngx_pcalloc(t->pool, ctx->dup_file_name.len);
+            ctx->dup_file_name.data = ngx_pcalloc(t->pool,
+                                                  ctx->dup_file_name.len);
             if (ctx->dup_file_name.data == NULL) {
                 rc = NGX_ERROR;
 
@@ -83,8 +92,11 @@ ngx_http_tfs_duplicate_get_handler(ngx_http_tair_key_value_t *kv, ngx_int_t rc, 
             rc = NGX_ERROR;
         }
         ngx_log_debug3(NGX_LOG_DEBUG_HTTP, t->log, 0,
-                       "get duplicate info: file name: %V, file ref count: %d, dup_version: %d",
-                       &ctx->dup_file_name, ctx->file_ref_count, ctx->dup_version);
+                       "get duplicate info: "
+                       "file name: %V, file ref count: %d, dup_version: %d",
+                       &ctx->dup_file_name,
+                       ctx->file_ref_count,
+                       ctx->dup_version);
 
     } else {
         rc = NGX_ERROR;
@@ -123,21 +135,27 @@ ngx_http_tfs_set_duplicate_info(ngx_http_tfs_dedup_ctx_t *ctx,
     tair_key.data = ctx->tair_key;
     tair_key.type = NGX_HTTP_TAIR_BYTEARRAY;
 
-    tair_value.len = NGX_HTTP_TFS_DUPLICATE_VALUE_BASE_SIZE + ctx->dup_file_name.len;
+    tair_value.len =
+        NGX_HTTP_TFS_DUPLICATE_VALUE_BASE_SIZE + ctx->dup_file_name.len;
     tair_value.data = ngx_pcalloc(pool, tair_value.len);
     if (tair_value.data == NULL) {
         return NGX_ERROR;
     }
-    ngx_memcpy(tair_value.data, &ctx->file_ref_count, NGX_HTTP_TFS_DUPLICATE_VALUE_BASE_SIZE);
+    ngx_memcpy(tair_value.data, &ctx->file_ref_count,
+               NGX_HTTP_TFS_DUPLICATE_VALUE_BASE_SIZE);
     ngx_memcpy(tair_value.data + NGX_HTTP_TFS_DUPLICATE_VALUE_BASE_SIZE,
                ctx->dup_file_name.data, ctx->dup_file_name.len);
     tair_value.type = NGX_HTTP_TAIR_BYTEARRAY;
     ngx_log_debug3(NGX_LOG_DEBUG_HTTP, log, 0,
-                   "set duplicate info: file name: %V, file ref count: %d, dup_version: %d",
-                   &ctx->dup_file_name, ctx->file_ref_count, ctx->dup_version);
+                   "set duplicate info: "
+                   "file name: %V, file ref count: %d, dup_version: %d",
+                   &ctx->dup_file_name,
+                   ctx->file_ref_count,
+                   ctx->dup_version);
 
     rc = ngx_http_tfs_tair_put_helper(ctx->tair_instance, pool, log,
-                                      &tair_key, &tair_value, 0/*expire*/, ctx->dup_version,
+                                      &tair_key, &tair_value, 0/*expire*/,
+                                      ctx->dup_version,
                                       ngx_http_tfs_duplicate_put_handler, ctx);
 
     return rc;
@@ -198,7 +216,8 @@ ngx_http_tfs_delete_duplicate_info(ngx_http_tfs_dedup_ctx_t *ctx,
 
     rc = ngx_http_tfs_tair_delete_helper(ctx->tair_instance, pool, log,
                                          &tair_keys,
-                                         ngx_http_tfs_duplicate_delete_handler, ctx);
+                                         ngx_http_tfs_duplicate_delete_handler,
+                                         ctx);
 
     return rc;
 }
@@ -230,8 +249,9 @@ ngx_http_tfs_duplicate_check_suffix(ngx_str_t *tfs_name, ngx_str_t *suffix)
     if ((tfs_name->len == NGX_HTTP_TFS_FILE_NAME_LEN && suffix->len == 0)
         || (tfs_name->len > NGX_HTTP_TFS_FILE_NAME_LEN && suffix->len > 0
             && ((tfs_name->len - NGX_HTTP_TFS_FILE_NAME_LEN) == suffix->len)
-            && (ngx_strncmp(suffix->data, tfs_name->data + NGX_HTTP_TFS_FILE_NAME_LEN, suffix->len)
-                == 0)))
+            && (ngx_strncmp(suffix->data,
+                            tfs_name->data + NGX_HTTP_TFS_FILE_NAME_LEN,
+                            suffix->len) == 0)))
     {
         rc = NGX_OK;
     }
@@ -241,13 +261,15 @@ ngx_http_tfs_duplicate_check_suffix(ngx_str_t *tfs_name, ngx_str_t *suffix)
 
 
 ngx_int_t
-ngx_http_tfs_duplicate_check_filename(ngx_str_t *dup_file_name, ngx_http_tfs_raw_fsname_t* fsname)
+ngx_http_tfs_duplicate_check_filename(ngx_str_t *dup_file_name,
+    ngx_http_tfs_raw_fsname_t* fsname)
 {
     ngx_int_t                    rc;
     ngx_str_t                    dup_file_suffix = ngx_null_string;
     ngx_http_tfs_raw_fsname_t    dup_fsname;
 
-    rc = ngx_http_tfs_raw_fsname_parse(dup_file_name, &dup_file_suffix, &dup_fsname);
+    rc = ngx_http_tfs_raw_fsname_parse(dup_file_name, &dup_file_suffix,
+                                       &dup_fsname);
     if (rc == NGX_OK) {
         if (fsname->cluster_id == dup_fsname.cluster_id
             && fsname->file.block_id == dup_fsname.file.block_id
@@ -278,18 +300,23 @@ ngx_http_tfs_duplicate_callback(ngx_http_tfs_dedup_ctx_t *ctx, ngx_int_t rc)
             /* exist in tair */
             if (rc == NGX_OK) {
                 /* check file name */
-                rc = ngx_http_tfs_duplicate_check_filename(&ctx->dup_file_name, &t->r_ctx.fsname);
+                rc = ngx_http_tfs_duplicate_check_filename(&ctx->dup_file_name,
+                                                           &t->r_ctx.fsname);
                 if (rc == NGX_OK) {
                     /* file name match, modify ref count and save tair */
                     if (t->r_ctx.unlink_type == NGX_HTTP_TFS_UNLINK_DELETE) {
                         if (--ctx->file_ref_count <= 0) {
-                            /* if ref count is 0, remove key from tair then unlink file */
+                            /* if ref count is 0,
+                             * remove key from tair then unlink file */
                             t->state = NGX_HTTP_TFS_STATE_REMOVE_GET_BLK_INFO;
                             t->is_stat_dup_file = NGX_HTTP_TFS_NO;
                             t->tfs_peer->body_buffer = ctx->save_body_buffer;
-                            rc = ngx_http_tfs_delete_duplicate_info(ctx, t->pool, t->log,
-                                                                    t->meta_segment_data);
-                            /* do not care delete tair fail, go on unlinking file */
+                            rc = ngx_http_tfs_delete_duplicate_info(ctx,
+                                                                    t->pool,
+                                                                    t->log,
+                                                          t->meta_segment_data);
+                            /* do not care delete tair fail,
+                             * go on unlinking file */
                             if (rc == NGX_ERROR) {
                                 ngx_http_tfs_finalize_state(t, NGX_OK);
                             }
@@ -299,8 +326,9 @@ ngx_http_tfs_duplicate_callback(ngx_http_tfs_dedup_ctx_t *ctx, ngx_int_t rc)
 
                         /* file_ref_count > 0, just save tair */
                         t->state = NGX_HTTP_TFS_STATE_REMOVE_DONE;
-                        rc = ngx_http_tfs_set_duplicate_info(ctx, t->pool, t->log,
-                                                             t->meta_segment_data);
+                        rc = ngx_http_tfs_set_duplicate_info(ctx, t->pool,
+                                                             t->log,
+                                                          t->meta_segment_data);
                         /* do not care save tair fail, return success */
                         if (rc == NGX_ERROR) {
                             ngx_http_tfs_finalize_state(t, NGX_DONE);
@@ -341,10 +369,13 @@ ngx_http_tfs_duplicate_callback(ngx_http_tfs_dedup_ctx_t *ctx, ngx_int_t rc)
             /* exist in tair */
             if (rc == NGX_OK) {
                 /* check suffix */
-                rc = ngx_http_tfs_duplicate_check_suffix(&ctx->dup_file_name, &t->r_ctx.file_suffix);
+                rc = ngx_http_tfs_duplicate_check_suffix(&ctx->dup_file_name,
+                                                         &t->r_ctx.file_suffix);
                 if (rc == NGX_OK) {
                     /* suffix match, need to stat file */
-                    rc = ngx_http_tfs_raw_fsname_parse(&ctx->dup_file_name, &ctx->dup_file_suffix, &t->r_ctx.fsname);
+                    rc = ngx_http_tfs_raw_fsname_parse(&ctx->dup_file_name,
+                                                       &ctx->dup_file_suffix,
+                                                       &t->r_ctx.fsname);
                     if (rc == NGX_OK) {
                         t->file.cluster_id = t->r_ctx.fsname.cluster_id;
                         t->is_stat_dup_file = NGX_HTTP_TFS_YES;
@@ -352,7 +383,8 @@ ngx_http_tfs_duplicate_callback(ngx_http_tfs_dedup_ctx_t *ctx, ngx_int_t rc)
                     }
 
                 } else {
-                    /* suffix not match, need save new tfs file, do not save tair */
+                    /* suffix not match, need save new tfs file,
+                     * do not save tair */
                     t->use_dedup = NGX_HTTP_TFS_NO;
                 }
             } /* not exist in tair need save new tfs file and tair */
@@ -362,7 +394,8 @@ ngx_http_tfs_duplicate_callback(ngx_http_tfs_dedup_ctx_t *ctx, ngx_int_t rc)
             if (rc != NGX_OK) {
                 ngx_log_error(NGX_LOG_ERR, t->log, 0,
                               "tfs get meta segment failed");
-                ngx_http_tfs_finalize_request(t->data, t, NGX_HTTP_INTERNAL_SERVER_ERROR);
+                ngx_http_tfs_finalize_request(t->data, t,
+                                              NGX_HTTP_INTERNAL_SERVER_ERROR);
                 return;
             }
 
@@ -370,25 +403,29 @@ ngx_http_tfs_duplicate_callback(ngx_http_tfs_dedup_ctx_t *ctx, ngx_int_t rc)
             if (t->is_stat_dup_file) {
                 /* dedup write may need to stat file */
                 if (rc_info->use_remote_block_cache) {
-                    rc = ngx_http_tfs_get_remote_block_cache_instance(&t->block_cache_ctx.remote_ctx,
+                    rc = ngx_http_tfs_get_remote_block_cache_instance(
+                              &t->block_cache_ctx.remote_ctx,
                               &rc_info->remote_block_cache_info);
                     if (rc == NGX_ERROR) {
                         ngx_log_error(NGX_LOG_ERR, t->log, 0,
-                                      "get remote block cache instance failed.");
+                                     "get remote block cache instance failed.");
 
                     } else {
-                        t->block_cache_ctx.use_cache |= NGX_HTTP_TFS_REMOTE_BLOCK_CACHE;
+                        t->block_cache_ctx.use_cache |=
+                            NGX_HTTP_TFS_REMOTE_BLOCK_CACHE;
                     }
                 }
 
-                rc = ngx_http_tfs_lookup_block_cache(t, &t->file.segment_data[t->file.segment_index]);
+                rc = ngx_http_tfs_lookup_block_cache(t,
+                                  &t->file.segment_data[t->file.segment_index]);
                 if (rc == NGX_ERROR) {
                     ngx_log_error(NGX_LOG_ERR, t->log, 0,
                                   "lookup block cache failed");
                 }
 
                 if (rc == NGX_DECLINED
-                    && (t->block_cache_ctx.use_cache & NGX_HTTP_TFS_REMOTE_BLOCK_CACHE))
+                    && (t->block_cache_ctx.use_cache
+                        & NGX_HTTP_TFS_REMOTE_BLOCK_CACHE))
                 {
                     return;
                 }
@@ -402,7 +439,8 @@ ngx_http_tfs_duplicate_callback(ngx_http_tfs_dedup_ctx_t *ctx, ngx_int_t rc)
                 ngx_http_tfs_finalize_state(t, NGX_DONE);
 
             } else {
-                /* save tair(add ref count) failed, need save new tfs file, do not save tair */
+                /* save tair(add ref count) failed,
+                 * need save new tfs file, do not save tair */
                 t->state = NGX_HTTP_TFS_STATE_WRITE_CLUSTER_ID_NS;
                 t->is_stat_dup_file = NGX_HTTP_TFS_NO;
                 t->use_dedup = NGX_HTTP_TFS_NO;
@@ -457,14 +495,17 @@ ngx_http_tfs_get_dedup_instance(ngx_http_tfs_dedup_ctx_t *ctx,
         for (i = 0; i < NGX_HTTP_TFS_MAX_CLUSTER_COUNT; i++) {
             instance = &t->main_conf->dup_instances[i];
             if (instance->server != NULL) {
-                ngx_http_etair_destory_server(instance->server, (ngx_cycle_t *) ngx_cycle);
+                ngx_http_etair_destory_server(instance->server,
+                                              (ngx_cycle_t *) ngx_cycle);
                 instance->server = NULL;
             }
         }
         instance = &t->main_conf->dup_instances[0];
     }
 
-    rc = ngx_array_init(&config_server, t->pool, NGX_HTTP_TFS_TAIR_CONFIG_SERVER_COUNT, sizeof(ngx_str_t));
+    rc = ngx_array_init(&config_server, t->pool,
+                        NGX_HTTP_TFS_TAIR_CONFIG_SERVER_COUNT,
+                        sizeof(ngx_str_t));
     if (rc == NGX_ERROR) {
         return NGX_ERROR;
     }
@@ -476,7 +517,8 @@ ngx_http_tfs_get_dedup_instance(ngx_http_tfs_dedup_ctx_t *ctx,
         }
     }
 
-    server = ngx_http_etair_create_server(&server_addr_info->server[NGX_HTTP_TFS_TAIR_CONFIG_SERVER_COUNT],
+    server = &server_addr_info->server[NGX_HTTP_TFS_TAIR_CONFIG_SERVER_COUNT];
+    server = ngx_http_etair_create_server(server,
                                           &config_server,
                                           t->main_conf->tair_timeout,
                                           (ngx_cycle_t *) ngx_cycle);

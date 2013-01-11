@@ -73,7 +73,8 @@ ngx_http_tfs_json_custom_file_info(ngx_http_tfs_json_gen_t *tj_gen,
             yajl_gen_map_open(g);
 
             yajl_gen_string(g, (const unsigned char *) "NAME", 4);
-            yajl_gen_string(g, (const unsigned char *) file[i].file_name.data, file[i].file_name.len);
+            yajl_gen_string(g, (const unsigned char *) file[i].file_name.data,
+                            file[i].file_name.len);
 
             yajl_gen_string(g, (const unsigned char *) "PID", 3);
             yajl_gen_integer(g, file[i].file_info.pid);
@@ -174,7 +175,8 @@ ngx_http_tfs_json_file_name(ngx_http_tfs_json_gen_t *tj_gen,
 
 ngx_chain_t *
 ngx_http_tfs_json_raw_file_info(ngx_http_tfs_json_gen_t *tj_gen,
-    u_char* file_name, uint32_t block_id, ngx_http_tfs_raw_file_info_t *file_info)
+    u_char* file_name, uint32_t block_id,
+    ngx_http_tfs_raw_file_info_t *file_info)
 {
     size_t                      size;
     u_char                      time_buf[NGX_HTTP_TFS_GMT_TIME_SIZE];
@@ -195,7 +197,7 @@ ngx_http_tfs_json_raw_file_info(ngx_http_tfs_json_gen_t *tj_gen,
 
     yajl_gen_string(g, (const unsigned char *) "FILE_ID", 7);
     yajl_gen_integer(g, file_info->id);
-	
+
     yajl_gen_string(g, (const unsigned char *) "OFFSET", 6);
     yajl_gen_integer(g, file_info->offset);
 
@@ -264,7 +266,8 @@ ngx_http_tfs_json_appid(ngx_http_tfs_json_gen_t *tj_gen,
 
     yajl_gen_map_open(g);
     yajl_gen_string(g, (const unsigned char *) "APP_ID", 6);
-    yajl_gen_string(g, (const unsigned char *) str_appid, ngx_strlen(str_appid));
+    yajl_gen_string(g, (const unsigned char *) str_appid,
+                    ngx_strlen(str_appid));
     yajl_gen_map_close(g);
 
     cl = ngx_alloc_chain_link(tj_gen->pool);

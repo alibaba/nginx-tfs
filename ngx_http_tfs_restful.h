@@ -47,7 +47,8 @@ typedef struct {
 } ngx_http_tfs_restful_ctx_t;
 
 
-ngx_int_t ngx_http_restful_parse(ngx_http_request_t *r, ngx_http_tfs_restful_ctx_t *ctx);
+ngx_int_t ngx_http_restful_parse(ngx_http_request_t *r,
+    ngx_http_tfs_restful_ctx_t *ctx);
 
 
 #endif  /* _NGX_HTTP_TFS_RESTFUL_H_INCLUDED_ */

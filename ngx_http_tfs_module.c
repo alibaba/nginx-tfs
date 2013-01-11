@@ -35,25 +35,30 @@ static char *ngx_http_tfs_merge_loc_conf(ngx_conf_t *cf,
 
 static ngx_int_t ngx_http_tfs_module_init(ngx_cycle_t *cycle);
 
-static char *ngx_http_tfs_upstream(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+static char *ngx_http_tfs_upstream(ngx_conf_t *cf, ngx_command_t *cmd,
+    void *conf);
 static char *ngx_http_tfs_pass(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 
 static char *ngx_http_tfs_log(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 
-static char *ngx_http_tfs_net_device(ngx_conf_t *cf, ngx_http_tfs_upstream_t *tu);
+static char *ngx_http_tfs_rcs_interface(ngx_conf_t *cf,
+    ngx_http_tfs_upstream_t *tu);
 
 static char *ngx_http_tfs_lowat_check(ngx_conf_t *cf, void *post, void *data);
 static void ngx_http_tfs_read_body_handler(ngx_http_request_t *r);
-static char *ngx_http_tfs_keepalive(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+static char *ngx_http_tfs_keepalive(ngx_conf_t *cf, ngx_command_t *cmd,
+    void *conf);
 
-static char *ngx_http_tfs_poll_rcs(ngx_conf_t *cf, ngx_http_tfs_upstream_t *tu);
+static char *ngx_http_tfs_rcs_heartbeat(ngx_conf_t *cf, ngx_http_tfs_upstream_t *tu);
 
 static char *ngx_http_tfs_rcs_zone(ngx_conf_t *cf, ngx_http_tfs_upstream_t *tu);
-static char *ngx_http_tfs_block_cache_zone(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+static char *ngx_http_tfs_block_cache_zone(ngx_conf_t *cf, ngx_command_t *cmd,
+    void *conf);
 
-static char *ngx_http_tfs_upstream_parse(ngx_conf_t *cf, ngx_command_t *dummy, void *conf);
+static char *ngx_http_tfs_upstream_parse(ngx_conf_t *cf, ngx_command_t *dummy,
+    void *conf);
 
 /* rc server keepalive */
 static ngx_int_t ngx_http_tfs_check_init_worker(ngx_cycle_t *cycle);
@@ -235,7 +240,8 @@ ngx_http_tfs_handler(ngx_http_request_t *r)
         t->block_cache_ctx.use_cache |= NGX_HTTP_TFS_REMOTE_BLOCK_CACHE;
     }
     t->block_cache_ctx.remote_ctx.data = t;
-    t->block_cache_ctx.remote_ctx.tair_instance = &tmcf->remote_block_cache_instance;
+    t->block_cache_ctx.remote_ctx.tair_instance =
+                                             &tmcf->remote_block_cache_instance;
     t->block_cache_ctx.curr_lookup_cache = NGX_HTTP_TFS_LOCAL_BLOCK_CACHE;
 
     rc = ngx_http_restful_parse(r, &t->r_ctx);
@@ -279,7 +285,8 @@ ngx_http_tfs_handler(ngx_http_request_t *r)
     case NGX_HTTP_TFS_ACTION_WRITE_FILE:
         r->headers_out.content_length_n = -1;
         ngx_http_set_ctx(r, t, ngx_http_tfs_module);
-        rc = ngx_http_read_client_request_body(r, ngx_http_tfs_read_body_handler);
+        rc = ngx_http_read_client_request_body(r,
+                                               ngx_http_tfs_read_body_handler);
         if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
             return rc;
         }
@@ -302,7 +309,8 @@ ngx_http_tfs_upstream_add(ngx_conf_t *cf, ngx_url_t *u, ngx_uint_t flags)
         if (ngx_parse_url(cf->pool, u) != NGX_OK) {
             if (u->err) {
                 ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                   "%s in tfs upstream \"%V\"", u->err, &u->url);
+                                   "%s in tfs upstream \"%V\"",
+                                   u->err, &u->url);
             }
 
             return NULL;
@@ -402,21 +410,21 @@ ngx_http_tfs_upstream(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     if (tu->enable_rcs) {
         if (tu->local_addr_text[0] == '\0') {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "type rc_server must set "
-                               "rcs_interface directives in tfs_upstream block");
+                               "type rcs_server must set rcs_interface "
+                               "directives in tfs_upstream block");
             return NGX_CONF_ERROR;
         }
 
         if (tu->lock_file.len == 0) {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "type rc must set "
-                               "rcs_heartbeat directives in tfs_upstream block");
+                               "type rcs must set rcs_heartbeat directives"
+                               " in tfs_upstream block");
             return NGX_CONF_ERROR;
         }
 
         if (tu->rc_ctx == NULL) {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "type rc must set "
+                               "type rcs must set "
                                "rcs_zone directives in tfs_upstream block");
             return NGX_CONF_ERROR;
         }
@@ -465,7 +473,9 @@ ngx_http_tfs_upstream_parse(ngx_conf_t *cf, ngx_command_t *dummy, void *conf)
 
         if (cf->args->nelts != 2) {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "invalid number of arguments in \"%s\" directive", &value[0]);
+                               "invalid number of arguments in "
+                               "\"%s\" directive",
+                               &value[0]);
             return NGX_CONF_ERROR;
         }
 
@@ -481,7 +491,8 @@ ngx_http_tfs_upstream_parse(ngx_conf_t *cf, ngx_command_t *dummy, void *conf)
 
         } else {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "invalid type \"%V\" in type directive", &value[1]);
+                               "invalid type \"%V\" in type directive",
+                               &value[1]);
             return NGX_CONF_ERROR;
         }
 
@@ -493,11 +504,11 @@ ngx_http_tfs_upstream_parse(ngx_conf_t *cf, ngx_command_t *dummy, void *conf)
     }
 
     if (ngx_strcmp(value[0].data, "rcs_interface") == 0) {
-        return ngx_http_tfs_net_device(cf, tu);
+        return ngx_http_tfs_rcs_interface(cf, tu);
     }
 
     if (ngx_strcmp(value[0].data, "rcs_heartbeat") == 0) {
-        return ngx_http_tfs_poll_rcs(cf, tu);
+        return ngx_http_tfs_rcs_heartbeat(cf, tu);
     }
 
     ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
@@ -570,12 +581,11 @@ invalid:
 
 
 static char *
-ngx_http_tfs_poll_rcs(ngx_conf_t *cf, ngx_http_tfs_upstream_t *tu)
+ngx_http_tfs_rcs_heartbeat(ngx_conf_t *cf, ngx_http_tfs_upstream_t *tu)
 {
     ngx_msec_t               interval;
     ngx_str_t               *value, s;
     ngx_uint_t               i;
-    ngx_int_t                rcs_kp_enable;
 
     value = cf->args->elts;
 
@@ -606,19 +616,6 @@ ngx_http_tfs_poll_rcs(ngx_conf_t *cf, ngx_http_tfs_upstream_t *tu)
             continue;
         }
 
-        if (ngx_strncmp(value[i].data, "enable=", 7) == 0) {
-            s.data = value[i].data + 7;
-            s.len = value[i].len - 7;
-
-            rcs_kp_enable = ngx_atoi(s.data, s.len);
-            if (rcs_kp_enable == NGX_ERROR) {
-                goto rcs_timers_error;
-            }
-
-            tu->rcs_kp_enable = rcs_kp_enable;
-            continue;
-        }
-
         goto rcs_timers_error;
     }
 
@@ -631,7 +628,8 @@ ngx_http_tfs_poll_rcs(ngx_conf_t *cf, ngx_http_tfs_upstream_t *tu)
     if (tu->rcs_interval < NGX_HTTP_TFS_MIN_TIMER_DELAY) {
         tu->rcs_interval = NGX_HTTP_TFS_MIN_TIMER_DELAY;
         ngx_conf_log_error(NGX_LOG_WARN, cf, 0,
-                           "tfs_poll interval is small, so reset this value to 1000");
+                           "tfs_poll interval is small, "
+                           "so reset this value to 1000");
     }
 
     return NGX_CONF_OK;
@@ -645,25 +643,28 @@ rcs_timers_error:
 
 
 static char *
-ngx_http_tfs_net_device(ngx_conf_t *cf, ngx_http_tfs_upstream_t *tu)
+ngx_http_tfs_rcs_interface(ngx_conf_t *cf, ngx_http_tfs_upstream_t *tu)
 {
     ngx_int_t                       rc;
     ngx_str_t                      *value;
 
     if (cf->args->nelts != 2) {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "invalid number of arguments in \"rcs_interface\" directive");
+                           "invalid number of arguments in "
+                           "\"rcs_interface\" directive");
         return NGX_CONF_ERROR;
     }
 
     value = cf->args->elts;
     rc = ngx_http_tfs_get_local_ip(value[1], &tu->local_addr);
     if (rc == NGX_ERROR) {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "device is invalid(%V)", &value[1]);
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "device is invalid(%V)",
+                           &value[1]);
         return NGX_CONF_ERROR;
     }
 
-    ngx_inet_ntop(AF_INET, &tu->local_addr.sin_addr, tu->local_addr_text, NGX_INET_ADDRSTRLEN);
+    ngx_inet_ntop(AF_INET, &tu->local_addr.sin_addr, tu->local_addr_text,
+                  NGX_INET_ADDRSTRLEN);
     return NGX_CONF_OK;
 }
 
@@ -827,7 +828,8 @@ ngx_http_tfs_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         add = 6;
 
     } else {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid URL prefix in tfs_pass");
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+                           "invalid URL prefix in tfs_pass");
         return NGX_CONF_ERROR;
     }
 
@@ -838,7 +840,8 @@ ngx_http_tfs_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     u.uri_part = 1;
     u.no_resolve = 1;
 
-    tlcf->upstream = ngx_http_tfs_upstream_add(cf, &u, NGX_HTTP_TFS_UPSTREAM_FIND);
+    tlcf->upstream = ngx_http_tfs_upstream_add(cf, &u,
+                                               NGX_HTTP_TFS_UPSTREAM_FIND);
     if (tlcf->upstream == NULL) {
         return NGX_CONF_ERROR;
     }
@@ -852,15 +855,18 @@ ngx_http_tfs_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     if (tlcf->upstream->enable_rcs) {
         if (tlcf->upstream->local_addr_text[0] == '\0') {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "in tfs module must assign net device name, use directives \"rcs_interface\" ");
+                               "in tfs module must assign net device name, "
+                               "use directives \"rcs_interface\" ");
             return NGX_CONF_ERROR;
         }
 
-        tlcf->upstream->rcs_shm_zone = ngx_shared_memory_add(cf, &tlcf->upstream->rcs_zone_name, 0,
-                                                             &ngx_http_tfs_module);
+        tlcf->upstream->rcs_shm_zone = ngx_shared_memory_add(cf,
+                                              &tlcf->upstream->rcs_zone_name, 0,
+                                              &ngx_http_tfs_module);
         if (tlcf->upstream->rcs_shm_zone == NULL) {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "in tfs module must assign rcs shm zone, use directives \"rcs_zone\" ");
+                               "in tfs module must assign rcs shm zone,"
+                               "use directives \"rcs_zone\" ");
             return NGX_CONF_ERROR;
         }
     }
@@ -870,10 +876,10 @@ ngx_http_tfs_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         s.len = sizeof(NGX_HTTP_TFS_BLOCK_CACHE_ZONE_NAME) - 1;
 
         tmcf->block_cache_shm_zone = ngx_shared_memory_add(cf, &s, 0,
-                                                           &ngx_http_tfs_module);
+                                                          &ngx_http_tfs_module);
         if (tmcf->block_cache_shm_zone == NULL) {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "in tfs module must assign block cache shm zone,"\
+                               "in tfs module must assign block cache shm zone,"
                                "use directives \"tfs_block_cache_zone\" ");
             return NGX_CONF_ERROR;
         }
@@ -929,7 +935,8 @@ ngx_http_tfs_rcs_zone(ngx_conf_t *cf, ngx_http_tfs_upstream_t *tu)
 
     if (cf->args->nelts != 3) {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "invalid number of arguments in \"rcs_zone\" directive");
+                           "invalid number of arguments in "
+                           "\"rcs_zone\" directive");
         return NGX_CONF_ERROR;
     }
 
@@ -971,13 +978,13 @@ ngx_http_tfs_rcs_zone(ngx_conf_t *cf, ngx_http_tfs_upstream_t *tu)
 
     if (size == 0) {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "\"rc_zone\" must have \"size\" parameter");
+                           "\"rcs_zone\" must have \"size\" parameter");
         return NGX_CONF_ERROR;
     }
 
     if (name.len == 0) {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "\"rc_zone\" must have  \"name\" parameter");
+                           "\"rcs_zone\" must have  \"name\" parameter");
         return NGX_CONF_ERROR;
     }
 
@@ -1092,7 +1099,9 @@ ngx_http_tfs_read_body_handler(ngx_http_request_t *r)
         }
     }
 
-    if (t->r_ctx.large_file || t->r_ctx.fsname.file_type == NGX_HTTP_TFS_LARGE_FILE_TYPE) {
+    if (t->r_ctx.large_file
+        || t->r_ctx.fsname.file_type == NGX_HTTP_TFS_LARGE_FILE_TYPE)
+    {
         t->is_large_file = NGX_HTTP_TFS_YES;
     }
 
@@ -1146,7 +1155,7 @@ ngx_http_tfs_module_init(ngx_cycle_t *cycle)
 
     for (i = 0; i < tmcf->upstreams.nelts; i++) {
         if (!tup[i]->enable_rcs
-            || !tup[i]->rcs_kp_enable
+            || !tup[i]->lock_file.len
             || !tup[i]->used)
         {
             return NGX_OK;
@@ -1159,7 +1168,9 @@ ngx_http_tfs_module_init(ngx_cycle_t *cycle)
 
         data->main_conf = tmcf;
         data->upstream = tup[i];
-        if ((data->lock = ngx_http_tfs_timers_init(cycle, tup[i]->lock_file.data)) == NULL) {
+        data->lock = ngx_http_tfs_timers_init(cycle, tup[i]->lock_file.data);
+        if (data->lock == NULL)
+        {
             return NGX_ERROR;
         }
 
@@ -1187,13 +1198,14 @@ ngx_http_tfs_check_init_worker(ngx_cycle_t *cycle)
 
     for (i = 0; i < tmcf->upstreams.nelts; i++) {
         if (!tup[i]->enable_rcs
-            || !tup[i]->rcs_kp_enable
+            || !tup[i]->lock_file.len
             || !tup[i]->used)
         {
             return NGX_OK;
         }
 
-        if (ngx_http_tfs_add_rcs_timers(cycle, tup[i]->timer_data) == NGX_ERROR) {
+        if (ngx_http_tfs_add_rcs_timers(cycle, tup[i]->timer_data) == NGX_ERROR)
+        {
             return NGX_ERROR;
         }
     }
@@ -1219,13 +1231,15 @@ ngx_http_tfs_check_exit_worker(ngx_cycle_t *cycle)
     for (i = 0; i < NGX_HTTP_TFS_MAX_CLUSTER_COUNT; i++) {
         dup_instance = &tmcf->dup_instances[i];
         if (dup_instance->server != NULL) {
-            ngx_http_etair_destory_server(dup_instance->server, (ngx_cycle_t *) ngx_cycle);
+            ngx_http_etair_destory_server(dup_instance->server,
+                                          (ngx_cycle_t *) ngx_cycle);
         }
     }
 
     /* destroy remote block cache server */
     if (tmcf->remote_block_cache_instance.server != NULL) {
-        ngx_http_etair_destory_server(tmcf->remote_block_cache_instance.server, (ngx_cycle_t *) ngx_cycle);
+        ngx_http_etair_destory_server(tmcf->remote_block_cache_instance.server,
+                                      (ngx_cycle_t *) ngx_cycle);
     }
 
 }

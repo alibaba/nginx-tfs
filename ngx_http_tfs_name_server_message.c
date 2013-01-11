@@ -10,8 +10,10 @@
 
 static ngx_chain_t *ngx_http_tfs_create_block_info_message(ngx_http_tfs_t *t,
     ngx_http_tfs_segment_data_t *segment_data);
-static ngx_chain_t *ngx_http_tfs_create_batch_block_info_message(ngx_http_tfs_t *t);
-static ngx_chain_t *ngx_http_tfs_create_ctl_message(ngx_http_tfs_t *t, uint8_t cmd);
+static ngx_chain_t *ngx_http_tfs_create_batch_block_info_message(
+    ngx_http_tfs_t *t);
+static ngx_chain_t *ngx_http_tfs_create_ctl_message(ngx_http_tfs_t *t,
+    uint8_t cmd);
 
 static ngx_int_t ngx_http_tfs_parse_block_info_message(ngx_http_tfs_t *t,
     ngx_http_tfs_segment_data_t *segment_data);
@@ -21,15 +23,18 @@ static ngx_int_t ngx_http_tfs_parse_ctl_message(ngx_http_tfs_t *t, uint8_t cmd);
 
 
 ngx_int_t
-ngx_http_tfs_select_name_server(ngx_http_tfs_t *t, ngx_http_tfs_rcs_info_t *rc_info,
-    ngx_http_tfs_inet_t *addr, ngx_str_t *addr_text)
+ngx_http_tfs_select_name_server(ngx_http_tfs_t *t,
+    ngx_http_tfs_rcs_info_t *rc_info, ngx_http_tfs_inet_t *addr,
+    ngx_str_t *addr_text)
 {
-    uint32_t                              cluster_id, curr_cluster_id, info_count, curr_block_id;
-    ngx_uint_t                            i, j;
-    ngx_http_tfs_group_info_t            *group_info;
-    ngx_http_tfs_logical_cluster_t       *logical_cluster;
-    ngx_http_tfs_physical_cluster_t      *physical_cluster;
-    ngx_http_tfs_cluster_group_info_t    *cluster_group_info;
+    uint32_t                            cluster_id, curr_cluster_id, info_count,
+                                        curr_block_id;
+    ngx_str_t                          *cluster_id_text;
+    ngx_uint_t                          i, j;
+    ngx_http_tfs_group_info_t          *group_info;
+    ngx_http_tfs_logical_cluster_t     *logical_cluster;
+    ngx_http_tfs_physical_cluster_t    *physical_cluster;
+    ngx_http_tfs_cluster_group_info_t  *cluster_group_info;
 
     curr_cluster_id = 0;
 
@@ -46,17 +51,29 @@ ngx_http_tfs_select_name_server(ngx_http_tfs_t *t, ngx_http_tfs_rcs_info_t *rc_i
     switch(t->r_ctx.action.code) {
     case NGX_HTTP_TFS_ACTION_STAT_FILE:
     case NGX_HTTP_TFS_ACTION_READ_FILE:
-        for (; t->logical_cluster_index < rc_info->logical_cluster_count; t->logical_cluster_index++) {
-            logical_cluster = &rc_info->logical_clusters[t->logical_cluster_index];
-            for (; t->rw_cluster_index < logical_cluster->rw_cluster_count; t->rw_cluster_index++) {
-                physical_cluster = &logical_cluster->rw_clusters[t->rw_cluster_index];
-                cluster_id = ngx_http_tfs_get_cluster_id(physical_cluster->cluster_id_text.data);
+        for (;
+             t->logical_cluster_index < rc_info->logical_cluster_count;
+             t->logical_cluster_index++)
+        {
+            logical_cluster =
+                           &rc_info->logical_clusters[t->logical_cluster_index];
+            for (;
+                 t->rw_cluster_index < logical_cluster->rw_cluster_count;
+                 t->rw_cluster_index++)
+            {
+                physical_cluster =
+                             &logical_cluster->rw_clusters[t->rw_cluster_index];
+                cluster_id_text = &physical_cluster->cluster_id_text;
+                cluster_id = ngx_http_tfs_get_cluster_id(cluster_id_text->data);
                 if (curr_cluster_id > 0 && cluster_id != curr_cluster_id) {
                     continue;
                 }
                 ngx_log_debug3(NGX_LOG_DEBUG_HTTP, t->log, 0,
-                               "read/stat, select logical cluster index: %ui, rw_cluster_index: %ui, nameserver: %V",
-                               t->logical_cluster_index, t->rw_cluster_index, &physical_cluster->ns_vip_text);
+                               "read/stat, select logical cluster "
+                               "index: %ui, rw_cluster_index: %ui, "
+                               "nameserver: %V",
+                               t->logical_cluster_index, t->rw_cluster_index,
+                               &physical_cluster->ns_vip_text);
                 (*addr) = physical_cluster->ns_vip;
                 (*addr_text) = physical_cluster->ns_vip_text;
                 return NGX_OK;
@@ -67,21 +84,38 @@ ngx_http_tfs_select_name_server(ngx_http_tfs_t *t, ngx_http_tfs_rcs_info_t *rc_i
         break;
 
     case NGX_HTTP_TFS_ACTION_WRITE_FILE:
-        for (; t->logical_cluster_index < rc_info->logical_cluster_count; t->logical_cluster_index++) {
-            logical_cluster = &rc_info->logical_clusters[t->logical_cluster_index];
-            for (; t->rw_cluster_index < logical_cluster->rw_cluster_count; t->rw_cluster_index++) {
-                physical_cluster = &logical_cluster->rw_clusters[t->rw_cluster_index];
-                if (physical_cluster->access_type == NGX_HTTP_TFS_ACCESS_READ_AND_WRITE) {
-                    /* custom file should ensure writing all frags in the same cluster */
+        for (;
+             t->logical_cluster_index < rc_info->logical_cluster_count;
+             t->logical_cluster_index++)
+        {
+            logical_cluster =
+                           &rc_info->logical_clusters[t->logical_cluster_index];
+            for (;
+                 t->rw_cluster_index < logical_cluster->rw_cluster_count;
+                 t->rw_cluster_index++)
+            {
+                physical_cluster =
+                             &logical_cluster->rw_clusters[t->rw_cluster_index];
+                if (physical_cluster->access_type
+                    == NGX_HTTP_TFS_ACCESS_READ_AND_WRITE)
+                {
+                    /* custom file should ensure writing
+                     * all frags in the same cluster */
                     if (curr_cluster_id > 0) {
-                        cluster_id = ngx_http_tfs_get_cluster_id(physical_cluster->cluster_id_text.data);
+                        cluster_id_text = &physical_cluster->cluster_id_text;
+                        cluster_id =
+                            ngx_http_tfs_get_cluster_id(cluster_id_text->data);
                         if (cluster_id != curr_cluster_id) {
                             continue;
                         }
                     }
                     ngx_log_debug3(NGX_LOG_DEBUG_HTTP, t->log, 0,
-                                   "write, select logical cluster index: %ui, rw_cluster_index: %ui, nameserver: %V",
-                                   t->logical_cluster_index, t->rw_cluster_index, &physical_cluster->ns_vip_text);
+                                   "write, select logical cluster "
+                                   "index: %ui, rw_cluster_index: %ui, "
+                                   "nameserver: %V",
+                                   t->logical_cluster_index,
+                                   t->rw_cluster_index,
+                                   &physical_cluster->ns_vip_text);
                     (*addr) = physical_cluster->ns_vip;
                     (*addr_text) = physical_cluster->ns_vip_text;
                     return NGX_OK;
@@ -100,7 +134,9 @@ ngx_http_tfs_select_name_server(ngx_http_tfs_t *t, ngx_http_tfs_rcs_info_t *rc_i
             cluster_id = cluster_group_info[i].cluster_id;
             info_count = cluster_group_info[i].info_count;
 
-            if ((curr_cluster_id > 0 && cluster_id != curr_cluster_id) || info_count < 1) {
+            if ((curr_cluster_id > 0 && cluster_id != curr_cluster_id)
+                || info_count < 1)
+            {
                 continue;
             }
 
@@ -126,12 +162,14 @@ ngx_http_tfs_select_name_server(ngx_http_tfs_t *t, ngx_http_tfs_rcs_info_t *rc_i
                 }
                 /* no master */
                 if (j == cluster_group_info[i].info_count) {
-                    /* sth wrong in TFS cluster configure, select the first cluster */
+                    /* sth wrong in TFS cluster configure,
+                     * select the first cluster */
                     (*addr) = group_info[0].ns_vip;
                     (*addr_text) = group_info[0].ns_vip_text;
                     t->state = NGX_HTTP_TFS_STATE_REMOVE_GET_BLK_INFO;
                     ngx_log_error(NGX_LOG_WARN, t->log, 0,
-                                  "unlink, no master found, select nameserver: %V",
+                                  "unlink, no master found, "
+                                  "select nameserver: %V",
                                   &group_info[0].ns_vip_text);
                     goto find_logical_cluster_index;
                 }
@@ -148,10 +186,12 @@ ngx_http_tfs_select_name_server(ngx_http_tfs_t *t, ngx_http_tfs_rcs_info_t *rc_i
                 if (t->r_ctx.version == 1) {
                     curr_block_id = t->r_ctx.fsname.file.block_id;
                 } else {
-                    curr_block_id = t->file.segment_data[0].segment_info.block_id;
+                    curr_block_id =
+                        t->file.segment_data[0].segment_info.block_id;
                 }
                 if (ngx_http_tfs_group_seq_match(curr_block_id,
-                        cluster_group_info[i].group_count, group_info[j].group_seq))
+                                              cluster_group_info[i].group_count,
+                                              group_info[j].group_seq))
                 {
                     (*addr) = group_info[j].ns_vip;
                     (*addr_text) = group_info[j].ns_vip_text;
@@ -170,12 +210,22 @@ find_logical_cluster_index:
         /* find out which logical cluster this addr belongs to
            so that we can use the right de-dup addr */
         t->logical_cluster_index = 0;
-        for (; t->logical_cluster_index < rc_info->logical_cluster_count; t->logical_cluster_index++) {
-            logical_cluster = &rc_info->logical_clusters[t->logical_cluster_index];
+        for ( ;
+              t->logical_cluster_index < rc_info->logical_cluster_count;
+              t->logical_cluster_index++)
+        {
+            logical_cluster =
+                &rc_info->logical_clusters[t->logical_cluster_index];
             t->rw_cluster_index = 0;
-            for (; t->rw_cluster_index < logical_cluster->rw_cluster_count; t->rw_cluster_index++) {
-                physical_cluster = &logical_cluster->rw_clusters[t->rw_cluster_index];
-                if (*(uint64_t*)(&physical_cluster->ns_vip) == *(uint64_t*)(addr)) {
+            for ( ;
+                  t->rw_cluster_index < logical_cluster->rw_cluster_count;
+                  t->rw_cluster_index++)
+            {
+                physical_cluster =
+                    &logical_cluster->rw_clusters[t->rw_cluster_index];
+                if (*(uint64_t*)(&physical_cluster->ns_vip)
+                    == *(uint64_t*)(addr))
+                {
                     return NGX_OK;
                 }
             }
@@ -202,44 +252,53 @@ ngx_http_tfs_name_server_create_message(ngx_http_tfs_t *t)
 
     switch (action) {
     case NGX_HTTP_TFS_ACTION_STAT_FILE:
-        t->file.open_mode = NGX_HTTP_TFS_OPEN_MODE_STAT | NGX_HTTP_TFS_OPEN_MODE_READ;
+        t->file.open_mode = NGX_HTTP_TFS_OPEN_MODE_STAT
+                             | NGX_HTTP_TFS_OPEN_MODE_READ;
         ngx_log_error(NGX_LOG_INFO, t->log, 0, "get block info from ns");
 
-        cl = ngx_http_tfs_create_block_info_message(t, &t->file.segment_data[t->file.segment_index]);
+        cl = ngx_http_tfs_create_block_info_message(t,
+                                  &t->file.segment_data[t->file.segment_index]);
         break;
     case NGX_HTTP_TFS_ACTION_READ_FILE:
         t->file.open_mode |= NGX_HTTP_TFS_OPEN_MODE_READ;
         ngx_log_error(NGX_LOG_INFO, t->log, 0, "get block info from ns");
 
         if (!t->parent
-            && (t->r_ctx.version == 2 || (t->is_large_file && !t->is_process_meta_seg)))
+            && (t->r_ctx.version == 2
+                || (t->is_large_file && !t->is_process_meta_seg)))
         {
             cl = ngx_http_tfs_create_batch_block_info_message(t);
 
         } else {
-            cl = ngx_http_tfs_create_block_info_message(t, &t->file.segment_data[t->file.segment_index]);
+            cl = ngx_http_tfs_create_block_info_message(t,
+                                  &t->file.segment_data[t->file.segment_index]);
         }
         break;
     case NGX_HTTP_TFS_ACTION_WRITE_FILE:
-        t->file.open_mode = NGX_HTTP_TFS_OPEN_MODE_WRITE | NGX_HTTP_TFS_OPEN_MODE_CREATE;
+        t->file.open_mode = NGX_HTTP_TFS_OPEN_MODE_WRITE
+                             | NGX_HTTP_TFS_OPEN_MODE_CREATE;
         switch(t->state) {
 
         case NGX_HTTP_TFS_STATE_WRITE_CLUSTER_ID_NS:
             ngx_log_error(NGX_LOG_INFO, t->log, 0, "get cluster id from ns");
-            cl = ngx_http_tfs_create_ctl_message(t, NGX_HTTP_TFS_CMD_GET_CLUSTER_ID_NS);
+            cl = ngx_http_tfs_create_ctl_message(t,
+                                            NGX_HTTP_TFS_CMD_GET_CLUSTER_ID_NS);
             break;
         case NGX_HTTP_TFS_STATE_WRITE_GET_BLK_INFO:
             ngx_log_error(NGX_LOG_INFO, t->log, 0, "get block info from ns");
             if (t->is_stat_dup_file) {
-                t->file.open_mode = NGX_HTTP_TFS_OPEN_MODE_STAT | NGX_HTTP_TFS_OPEN_MODE_READ;
+                t->file.open_mode = NGX_HTTP_TFS_OPEN_MODE_STAT
+                                     | NGX_HTTP_TFS_OPEN_MODE_READ;
             }
             if (!t->parent &&
-                (t->r_ctx.version == 2 || (t->is_large_file && !t->is_process_meta_seg)))
+                (t->r_ctx.version == 2
+                 || (t->is_large_file && !t->is_process_meta_seg)))
             {
                 cl = ngx_http_tfs_create_batch_block_info_message(t);
 
             } else {
-                cl = ngx_http_tfs_create_block_info_message(t, &t->file.segment_data[t->file.segment_index]);
+                cl = ngx_http_tfs_create_block_info_message(t,
+                                  &t->file.segment_data[t->file.segment_index]);
             }
             break;
         }
@@ -248,20 +307,24 @@ ngx_http_tfs_name_server_create_message(ngx_http_tfs_t *t)
         switch(t->state) {
         case NGX_HTTP_TFS_STATE_REMOVE_GET_GROUP_COUNT:
             ngx_log_error(NGX_LOG_INFO, t->log, 0, "get group count from ns");
-            cl = ngx_http_tfs_create_ctl_message(t, NGX_HTTP_TFS_CMD_GET_GROUP_COUNT);
+            cl = ngx_http_tfs_create_ctl_message(t,
+                                              NGX_HTTP_TFS_CMD_GET_GROUP_COUNT);
             break;
         case NGX_HTTP_TFS_STATE_REMOVE_GET_GROUP_SEQ:
             ngx_log_error(NGX_LOG_INFO, t->log, 0, "get group seq from ns");
-            cl = ngx_http_tfs_create_ctl_message(t, NGX_HTTP_TFS_CMD_GET_GROUP_SEQ);
+            cl = ngx_http_tfs_create_ctl_message(t,
+                                                NGX_HTTP_TFS_CMD_GET_GROUP_SEQ);
             break;
         default:
             t->file.open_mode = NGX_HTTP_TFS_OPEN_MODE_WRITE;
             if (t->is_stat_dup_file) {
-                t->file.open_mode = NGX_HTTP_TFS_OPEN_MODE_STAT | NGX_HTTP_TFS_OPEN_MODE_READ;
+                t->file.open_mode = NGX_HTTP_TFS_OPEN_MODE_STAT
+                                     | NGX_HTTP_TFS_OPEN_MODE_READ;
             }
 
             ngx_log_error(NGX_LOG_INFO, t->log, 0, "get block info from ns");
-            cl = ngx_http_tfs_create_block_info_message(t, &t->file.segment_data[t->file.segment_index]);
+            cl = ngx_http_tfs_create_block_info_message(t,
+                                  &t->file.segment_data[t->file.segment_index]);
         }
         break;
     default:
@@ -284,49 +347,54 @@ ngx_http_tfs_name_server_parse_message(ngx_http_tfs_t *t)
     switch (action) {
     case NGX_HTTP_TFS_ACTION_STAT_FILE:
         return ngx_http_tfs_parse_block_info_message(t,
-                                                     &t->file.segment_data[t->file.segment_index]);
+                                 &t->file.segment_data[t->file.segment_index]);
     case NGX_HTTP_TFS_ACTION_READ_FILE:
         if (!t->parent
-            && (t->r_ctx.version == 2 || (t->is_large_file && !t->is_process_meta_seg)))
+            && (t->r_ctx.version == 2
+                || (t->is_large_file && !t->is_process_meta_seg)))
         {
             rc = ngx_http_tfs_parse_batch_block_info_message(t,
-                                                             &t->file.segment_data[t->file.segment_index]);
+                                 &t->file.segment_data[t->file.segment_index]);
 
         } else {
             rc = ngx_http_tfs_parse_block_info_message(t,
-                                                       &t->file.segment_data[t->file.segment_index]);
+                                 &t->file.segment_data[t->file.segment_index]);
         }
         return rc;
     case NGX_HTTP_TFS_ACTION_WRITE_FILE:
         switch(t->state) {
         case NGX_HTTP_TFS_STATE_WRITE_CLUSTER_ID_NS:
-            return ngx_http_tfs_parse_ctl_message(t, NGX_HTTP_TFS_CMD_GET_CLUSTER_ID_NS);
+            return ngx_http_tfs_parse_ctl_message(t,
+                                            NGX_HTTP_TFS_CMD_GET_CLUSTER_ID_NS);
         case NGX_HTTP_TFS_STATE_WRITE_GET_BLK_INFO:
             if (!t->parent
-                && (t->r_ctx.version == 2 || (t->is_large_file && !t->is_process_meta_seg)))
+                && (t->r_ctx.version == 2
+                    || (t->is_large_file && !t->is_process_meta_seg)))
             {
                 rc = ngx_http_tfs_parse_batch_block_info_message(t,
-                                                                 &t->file.segment_data[t->file.segment_index]);
+                                 &t->file.segment_data[t->file.segment_index]);
 
             } else {
                 rc = ngx_http_tfs_parse_block_info_message(t,
-                                                           &t->file.segment_data[t->file.segment_index]);
+                                  &t->file.segment_data[t->file.segment_index]);
             }
         }
         return rc;
     case NGX_HTTP_TFS_ACTION_REMOVE_FILE:
         switch(t->state) {
         case NGX_HTTP_TFS_STATE_REMOVE_GET_GROUP_COUNT:
-            rc = ngx_http_tfs_parse_ctl_message(t, NGX_HTTP_TFS_CMD_GET_GROUP_COUNT);
+            rc = ngx_http_tfs_parse_ctl_message(t,
+                                              NGX_HTTP_TFS_CMD_GET_GROUP_COUNT);
             return rc;
 
         case NGX_HTTP_TFS_STATE_REMOVE_GET_GROUP_SEQ:
-            rc = ngx_http_tfs_parse_ctl_message(t, NGX_HTTP_TFS_CMD_GET_GROUP_SEQ);
+            rc = ngx_http_tfs_parse_ctl_message(t,
+                                                NGX_HTTP_TFS_CMD_GET_GROUP_SEQ);
             return rc;
 
         case NGX_HTTP_TFS_STATE_REMOVE_GET_BLK_INFO:
             return ngx_http_tfs_parse_block_info_message(t,
-                                                         &t->file.segment_data[t->file.segment_index]);
+                                  &t->file.segment_data[t->file.segment_index]);
         default:
             break;
         }
@@ -383,13 +451,13 @@ ngx_http_tfs_create_block_info_message(ngx_http_tfs_t *t,
 static ngx_chain_t *
 ngx_http_tfs_create_batch_block_info_message(ngx_http_tfs_t *t)
 {
-    size_t                                              size;
-    uint32_t                                            block_count, real_block_count;
-    ngx_int_t                                           i, j;
-    ngx_buf_t                                          *b;
-    ngx_chain_t                                        *cl;
-    ngx_http_tfs_segment_data_t                        *segment_data;
-    ngx_http_tfs_ns_batch_block_info_request_t         *req;
+    size_t                                       size;
+    uint32_t                                     block_count, real_block_count;
+    ngx_int_t                                    i, j;
+    ngx_buf_t                                   *b;
+    ngx_chain_t                                 *cl;
+    ngx_http_tfs_segment_data_t                 *segment_data;
+    ngx_http_tfs_ns_batch_block_info_request_t  *req;
 
     block_count = t->file.segment_count - t->file.segment_index;
     if (block_count > NGX_HTTP_TFS_MAX_SEND_FRAG_COUNT) {
@@ -406,7 +474,8 @@ ngx_http_tfs_create_batch_block_info_message(ngx_http_tfs_t *t)
         }
     }
 
-    size = sizeof(ngx_http_tfs_ns_batch_block_info_request_t) + real_block_count * sizeof(uint32_t);
+    size = sizeof(ngx_http_tfs_ns_batch_block_info_request_t)
+            + real_block_count * sizeof(uint32_t);
 
     b = ngx_create_temp_buf(t->pool, size);
     if (b == NULL) {
@@ -541,7 +610,8 @@ ngx_http_tfs_parse_block_info_message(ngx_http_tfs_t *t,
     block_info = &segment_data->block_info;
 
     block_info->ds_count = ds_count;
-    block_info->ds_addrs = ngx_pcalloc(t->pool, sizeof(ngx_http_tfs_inet_t) * ds_count);
+    block_info->ds_addrs = ngx_pcalloc(t->pool,
+                                       sizeof(ngx_http_tfs_inet_t) * ds_count);
     if (block_info->ds_addrs == NULL) {
         return NGX_ERROR;
     }
@@ -579,8 +649,11 @@ ngx_http_tfs_parse_block_info_message(ngx_http_tfs_t *t,
     segment_data->ds_retry = 0;
 
     ngx_log_debug5(NGX_LOG_DEBUG_HTTP, t->log, 0,
-                   "get block info from nameserver: %V, block id: %uD, ds count: %uD, version: %D, lease id: %D",
-                   &t->name_server_addr_text, resp->block_id, block_info->ds_count,
+                   "get block info from "
+                   "nameserver: %V, block id: %uD, ds count: %uD, "
+                   "version: %D, lease id: %D",
+                   &t->name_server_addr_text, resp->block_id,
+                   block_info->ds_count,
                    block_info->version, block_info->lease_id);
 
     return NGX_OK;
@@ -591,17 +664,19 @@ ngx_int_t
 ngx_http_tfs_parse_batch_block_info_message(ngx_http_tfs_t *t,
     ngx_http_tfs_segment_data_t *segment_data)
 {
-    u_char                                          *p;
-    uint16_t                                         type;
-    uint32_t                                         block_count, real_block_count, complete_count, ds_count, block_id;
-    ngx_str_t                                        err_msg;
-    ngx_uint_t                                       i, j, k;
-    ngx_http_tfs_header_t                           *header;
-    ngx_http_tfs_block_info_t                       *block_info;
-    ngx_http_tfs_peer_connection_t                  *tp;
-    ngx_http_tfs_block_cache_key_t                   key;
-    ngx_http_tfs_block_cache_value_t                 value;
-    ngx_http_tfs_ns_batch_block_info_response_t     *resp;
+    u_char                                       *p;
+    uint16_t                                      type;
+    uint32_t                                      block_count, real_block_count,
+                                                  complete_count, ds_count,
+                                                  block_id;
+    ngx_str_t                                     err_msg;
+    ngx_uint_t                                    i, j, k;
+    ngx_http_tfs_header_t                        *header;
+    ngx_http_tfs_block_info_t                    *block_info;
+    ngx_http_tfs_peer_connection_t               *tp;
+    ngx_http_tfs_block_cache_key_t                key;
+    ngx_http_tfs_block_cache_value_t              value;
+    ngx_http_tfs_ns_batch_block_info_response_t  *resp;
 
     header = (ngx_http_tfs_header_t *) t->header;
     tp = t->tfs_peer;
@@ -615,7 +690,8 @@ ngx_http_tfs_parse_batch_block_info_message(ngx_http_tfs_t *t,
 
     resp = (ngx_http_tfs_ns_batch_block_info_response_t *) tp->body_buffer.pos;
 
-    p = tp->body_buffer.pos + sizeof(ngx_http_tfs_ns_batch_block_info_response_t);
+    p = tp->body_buffer.pos
+         + sizeof(ngx_http_tfs_ns_batch_block_info_response_t);
 
     block_count = t->file.segment_count - t->file.segment_index;
     if (block_count > NGX_HTTP_TFS_MAX_SEND_FRAG_COUNT) {
@@ -663,7 +739,8 @@ ngx_http_tfs_parse_batch_block_info_message(ngx_http_tfs_t *t,
             block_info->ds_count = ds_count;
         }
 
-        block_info->ds_addrs = ngx_pcalloc(t->pool, sizeof(ngx_http_tfs_inet_t) * ds_count);
+        block_info->ds_addrs = ngx_pcalloc(t->pool,
+                                        sizeof(ngx_http_tfs_inet_t) * ds_count);
         if (block_info->ds_addrs == NULL) {
             return NGX_ERROR;
         }
@@ -687,9 +764,11 @@ ngx_http_tfs_parse_batch_block_info_message(ngx_http_tfs_t *t,
         }
 
         ngx_log_debug5(NGX_LOG_DEBUG_HTTP, t->log, 0,
-                       "batch get block info from nameserver: %V, block id: %uD, "
+                       "batch get block info from nameserver: "
+                       "%V, block id: %uD, "
                        "ds count: %uD, version: %D, lease id: %D",
-                       &t->name_server_addr_text, block_id, block_info->ds_count,
+                       &t->name_server_addr_text, block_id,
+                       block_info->ds_count,
                        block_info->version, block_info->lease_id);
 
         /* insert block cache  */
@@ -718,7 +797,9 @@ ngx_http_tfs_parse_batch_block_info_message(ngx_http_tfs_t *t,
 
             /* maybe has duplicate block, find in already complete segment */
             for (j = 0; j < i; j++) {
-                if (segment_data[i].segment_info.block_id != segment_data[j].segment_info.block_id) {
+                if (segment_data[i].segment_info.block_id
+                    != segment_data[j].segment_info.block_id)
+                {
                     continue;
                 }
                 //TODO: check this

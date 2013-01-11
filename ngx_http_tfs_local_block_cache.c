@@ -7,7 +7,8 @@
 #include <ngx_http_tfs_local_block_cache.h>
 
 
-static void ngx_http_tfs_local_block_cache_rbtree_insert_value(ngx_rbtree_node_t *temp,
+static void ngx_http_tfs_local_block_cache_rbtree_insert_value(
+    ngx_rbtree_node_t *temp,
     ngx_rbtree_node_t *node, ngx_rbtree_node_t *sentinel);
 
 ngx_int_t
@@ -34,7 +35,8 @@ ngx_http_tfs_local_block_cache_init_zone(ngx_shm_zone_t *shm_zone, void *data)
         return NGX_OK;
     }
 
-    ctx->sh = ngx_slab_alloc(ctx->shpool, sizeof(ngx_http_tfs_block_cache_shctx_t));
+    ctx->sh = ngx_slab_alloc(ctx->shpool,
+                             sizeof(ngx_http_tfs_block_cache_shctx_t));
     if (ctx->sh == NULL) {
         return NGX_ERROR;
     }
@@ -108,6 +110,7 @@ ngx_http_tfs_local_block_cache_lookup(ngx_http_tfs_local_block_cache_ctx_t *ctx,
     ngx_http_tfs_block_cache_key_t* key,
     ngx_http_tfs_block_cache_value_t *value)
 {
+    double                            hit_ratio;
     ngx_int_t                         rc;
     ngx_uint_t                        hash;
     ngx_slab_pool_t                  *shpool;
@@ -143,18 +146,24 @@ ngx_http_tfs_local_block_cache_lookup(ngx_http_tfs_local_block_cache_ctx_t *ctx,
         rc = ngx_http_tfs_block_cache_cmp(key, &bcn->key);
         if (rc == 0) {
             value->ds_count = bcn->count;
-            value->ds_addrs = ngx_pcalloc(pool, value->ds_count * sizeof(uint64_t));
+            value->ds_addrs = ngx_pcalloc(pool,
+                                          value->ds_count * sizeof(uint64_t));
             if (value->ds_addrs == NULL) {
                 ngx_shmtx_unlock(&shpool->mutex);
                 return NGX_ERROR;
             }
-            ngx_memcpy(value->ds_addrs, bcn->data, value->ds_count * sizeof(uint64_t));
+            ngx_memcpy(value->ds_addrs, bcn->data,
+                       value->ds_count * sizeof(uint64_t));
             ngx_queue_remove(&bcn->queue);
             ngx_queue_insert_head(&ctx->sh->queue, &bcn->queue);
             ctx->sh->hit_count++;
             if (ctx->sh->hit_count >= NGX_HTTP_TFS_BLOCK_CACHE_STAT_COUNT) {
-                ngx_log_error(NGX_LOG_INFO, log, 0, "local block cache hit_ratio: %.2f%%",
-                              100 * (double)((double)ctx->sh->hit_count / (double)(ctx->sh->hit_count + ctx->sh->miss_count)));
+                hit_ratio = 100 * (double)((double)ctx->sh->hit_count
+                                           / (double)(ctx->sh->hit_count
+                                                      + ctx->sh->miss_count));
+                ngx_log_error(NGX_LOG_INFO, log, 0,
+                              "local block cache hit_ratio: %.2f%%",
+                              hit_ratio);
                 ctx->sh->hit_count = 0;
                 ctx->sh->miss_count = 0;
             }
@@ -167,7 +176,8 @@ ngx_http_tfs_local_block_cache_lookup(ngx_http_tfs_local_block_cache_ctx_t *ctx,
     ngx_shmtx_unlock(&shpool->mutex);
 
     ngx_log_debug2(NGX_LOG_DEBUG_HTTP, log, 0,
-                   "lookup local block cache, ns addr: %uL, block id: %uD not found",
+                   "lookup local block cache, "
+                   "ns addr: %uL, block id: %uD not found",
                    key->ns_addr, key->block_id);
 
     return NGX_DECLINED;
@@ -209,7 +219,8 @@ ngx_http_tfs_local_block_cache_insert(ngx_http_tfs_local_block_cache_ctx_t *ctx,
 
     bcn = (ngx_http_tfs_block_cache_node_t *) &node->color;
 
-    node->key = ngx_murmur_hash2((u_char*)key, NGX_HTTP_TFS_BLOCK_CACHE_KEY_SIZE);
+    node->key = ngx_murmur_hash2((u_char*)key,
+                                 NGX_HTTP_TFS_BLOCK_CACHE_KEY_SIZE);
     ngx_memcpy(&bcn->key, key, NGX_HTTP_TFS_BLOCK_CACHE_KEY_SIZE);
     bcn->len = (u_char) value->ds_count * sizeof(uint64_t);
     bcn->count = value->ds_count;
@@ -276,14 +287,16 @@ ngx_http_tfs_local_block_cache_remove(ngx_http_tfs_local_block_cache_ctx_t *ctx,
     ngx_shmtx_unlock(&shpool->mutex);
 
     ngx_log_debug2(NGX_LOG_DEBUG_HTTP, log, 0,
-                   "remove local block cache, ns addr: %uL, block id: %uD not found",
+                   "remove local block cache, "
+                   "ns addr: %uL, block id: %uD not found",
                    key->ns_addr, key->block_id);
 
 }
 
 
 void
-ngx_http_tfs_local_block_cache_discard(ngx_http_tfs_local_block_cache_ctx_t *ctx)
+ngx_http_tfs_local_block_cache_discard(
+    ngx_http_tfs_local_block_cache_ctx_t *ctx)
 {
     ngx_uint_t                          i;
     ngx_queue_t                        *q, *h, *p;
@@ -322,9 +335,11 @@ ngx_http_tfs_local_block_cache_discard(ngx_http_tfs_local_block_cache_ctx_t *ctx
 
 
 ngx_int_t
-ngx_http_tfs_local_block_cache_batch_lookup(ngx_http_tfs_local_block_cache_ctx_t *ctx,
+ngx_http_tfs_local_block_cache_batch_lookup(
+    ngx_http_tfs_local_block_cache_ctx_t *ctx,
     ngx_pool_t *pool, ngx_log_t *log, ngx_array_t *keys, ngx_array_t *kvs)
 {
+    double                                hit_ratio; 
     ngx_int_t                             rc;
     ngx_uint_t                            i, hash, hit_count;
     ngx_slab_pool_t                      *shpool;
@@ -348,7 +363,8 @@ ngx_http_tfs_local_block_cache_batch_lookup(ngx_http_tfs_local_block_cache_ctx_t
 
     for (i = 0; i < keys->nelts; i++, key++) {
         node = ctx->sh->rbtree.root;
-        hash = ngx_murmur_hash2((u_char*)key, NGX_HTTP_TFS_BLOCK_CACHE_KEY_SIZE);
+        hash = ngx_murmur_hash2((u_char*)key,
+                                NGX_HTTP_TFS_BLOCK_CACHE_KEY_SIZE);
 
         while (node != sentinel) {
 
@@ -366,19 +382,22 @@ ngx_http_tfs_local_block_cache_batch_lookup(ngx_http_tfs_local_block_cache_ctx_t
             bcn = (ngx_http_tfs_block_cache_node_t *) &node->color;
             rc = ngx_http_tfs_block_cache_cmp(key, &bcn->key);
             if (rc == 0) {
-                value = ngx_pcalloc(pool, sizeof(ngx_http_tfs_block_cache_value_t));
+                value = ngx_pcalloc(pool,
+                                    sizeof(ngx_http_tfs_block_cache_value_t));
                 if (value == NULL) {
                     ngx_shmtx_unlock(&shpool->mutex);
                     return NGX_ERROR;
                 }
 
                 value->ds_count = bcn->count;
-                value->ds_addrs = ngx_pcalloc(pool, value->ds_count * sizeof(uint64_t));
+                value->ds_addrs = ngx_pcalloc(pool,
+                                            value->ds_count * sizeof(uint64_t));
                 if (value->ds_addrs == NULL) {
                     ngx_shmtx_unlock(&shpool->mutex);
                     return NGX_ERROR;
                 }
-                ngx_memcpy(value->ds_addrs, bcn->data, value->ds_count * sizeof(uint64_t));
+                ngx_memcpy(value->ds_addrs, bcn->data,
+                           value->ds_count * sizeof(uint64_t));
 
                 kv = (ngx_http_tfs_block_cache_kv_t *)ngx_array_push(kvs);
                 kv->key = key;
@@ -399,8 +418,12 @@ ngx_http_tfs_local_block_cache_batch_lookup(ngx_http_tfs_local_block_cache_ctx_t
 
     ctx->sh->hit_count += hit_count;
     if (ctx->sh->hit_count >= NGX_HTTP_TFS_BLOCK_CACHE_STAT_COUNT) {
-        ngx_log_error(NGX_LOG_INFO, log, 0, "local block cache hit_ratio: %.2f%%",
-                      100 * (double)((double)ctx->sh->hit_count / (double)(ctx->sh->hit_count + ctx->sh->miss_count)));
+        hit_ratio = 100 * (double)((double)ctx->sh->hit_count
+                                   / (double)(ctx->sh->hit_count
+                                              + ctx->sh->miss_count));
+        ngx_log_error(NGX_LOG_INFO, log, 0,
+                      "local block cache hit_ratio: %.2f%%",
+                      hit_ratio);
         ctx->sh->hit_count = 0;
         ctx->sh->miss_count = 0;
     }

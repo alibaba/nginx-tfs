@@ -32,7 +32,8 @@ static ngx_int_t
 ngx_http_tfs_update_info_node(ngx_http_tfs_t *t, ngx_http_tfs_rc_ctx_t *rc_ctx,
     ngx_http_tfs_rcs_info_t *rc_info_node, u_char *base_info);
 
-static ngx_int_t ngx_http_tfs_parse_session_id(ngx_str_t *session_id, uint64_t *app_id);
+static ngx_int_t ngx_http_tfs_parse_session_id(ngx_str_t *session_id,
+    uint64_t *app_id);
 
 
 ngx_chain_t *
@@ -69,15 +70,17 @@ ngx_http_tfs_create_login_message(ngx_http_tfs_t *t)
     struct sockaddr_in                        *addr;
     ngx_http_tfs_rcs_login_msg_header_t       *req;
 
-    b = ngx_create_temp_buf(t->pool, sizeof(ngx_http_tfs_rcs_login_msg_header_t) +
-                            sizeof(uint64_t) + t->r_ctx.appkey.len + 1);
+    b = ngx_create_temp_buf(t->pool,
+                            sizeof(ngx_http_tfs_rcs_login_msg_header_t)
+                             + sizeof(uint64_t) + t->r_ctx.appkey.len + 1);
     if (b == NULL) {
         return NULL;
     }
 
     req = (ngx_http_tfs_rcs_login_msg_header_t *) b->pos;
     req->header.flag = NGX_HTTP_TFS_PACKET_FLAG;
-    req->header.len = sizeof(uint64_t) + t->r_ctx.appkey.len + sizeof(uint32_t) + 1;
+    req->header.len = sizeof(uint64_t) + t->r_ctx.appkey.len
+                       + sizeof(uint32_t) + 1;
     req->header.type = NGX_HTTP_TFS_REQ_RC_LOGIN_MESSAGE;
     req->header.version = NGX_HTTP_TFS_PACKET_VERSION;
     req->header.id = ngx_http_tfs_generate_packet_id();
@@ -159,7 +162,7 @@ ngx_http_tfs_create_keepalive_message(ngx_http_tfs_t *t)
     rc_info = ngx_queue_data(q, ngx_http_tfs_rcs_info_t, kp_queue);
 
     ngx_log_error(NGX_LOG_INFO, t->log, 0,
-        "will do keepalive for appkey: %V", &rc_info->appkey);
+                  "will do keepalive for appkey: %V", &rc_info->appkey);
 
     size = base_size + rc_info->session_id.len + 1;
     b = ngx_create_temp_buf(t->pool, size);
@@ -187,7 +190,8 @@ ngx_http_tfs_create_keepalive_message(ngx_http_tfs_t *t)
     *((uint32_t *) p) = sizeof(NGX_HTTP_TFS_CLIENT_VERSION);
     p += sizeof(uint32_t);
 
-    p = ngx_cpymem(p, NGX_HTTP_TFS_CLIENT_VERSION, sizeof(NGX_HTTP_TFS_CLIENT_VERSION));
+    p = ngx_cpymem(p, NGX_HTTP_TFS_CLIENT_VERSION,
+                   sizeof(NGX_HTTP_TFS_CLIENT_VERSION));
 
     ngx_memzero(p, sizeof(uint64_t) * 4 + sizeof(uint32_t) + sizeof(uint8_t));
 
@@ -255,7 +259,8 @@ ngx_http_tfs_parse_login_message(ngx_http_tfs_t *t)
     rc = NGX_OK;
 
     if (rc_info == NULL) {
-        rc = ngx_http_tfs_create_info_node(t, rc_ctx, tp->body_buffer.pos, t->r_ctx.appkey);
+        rc = ngx_http_tfs_create_info_node(t, rc_ctx, tp->body_buffer.pos,
+                                           t->r_ctx.appkey);
 
     } else {
         t->rc_info_node = rc_info;
@@ -263,10 +268,12 @@ ngx_http_tfs_parse_login_message(ngx_http_tfs_t *t)
     ngx_shmtx_unlock(&rc_ctx->shpool->mutex);
 
     if (rc == NGX_OK) {
-        rc = ngx_http_tfs_parse_session_id(&t->rc_info_node->session_id, &t->rc_info_node->app_id);
+        rc = ngx_http_tfs_parse_session_id(&t->rc_info_node->session_id,
+                                           &t->rc_info_node->app_id);
         if (rc == NGX_ERROR) {
             ngx_log_error(NGX_LOG_ERR, t->log, 0,
-                          "invalid session id: %V", &t->rc_info_node->session_id);
+                          "invalid session id: %V",
+                          &t->rc_info_node->session_id);
         }
     }
     return rc;
@@ -333,7 +340,8 @@ ngx_http_tfs_parse_keepalive_message(ngx_http_tfs_t *t)
     rc_info = ngx_queue_data(q, ngx_http_tfs_rcs_info_t, kp_queue);
 
     /* update info node */
-    /* FIXME: sth terrible may happen here if someone has get the rc_info before lock */
+    /* FIXME: sth terrible may happen here
+     * if someone has get the rc_info before lock */
     ngx_shmtx_lock(&rc_ctx->shpool->mutex);
     rc = ngx_http_tfs_update_info_node(t, rc_ctx, rc_info, p);
     /* rc_info has been destroyed, remove from queue and rbtree */
@@ -365,7 +373,8 @@ ngx_http_tfs_parse_rc_info(ngx_http_tfs_rcs_info_t *rc_info_node,
     ngx_http_tfs_group_info_t                *group_info;
     ngx_http_tfs_logical_cluster_t           *logical_cluster;
     ngx_http_tfs_physical_cluster_t          *physical_cluster;
-    ngx_http_tfs_cluster_group_info_t        *cluster_group_info, *cluster_group_info2;
+    ngx_http_tfs_cluster_group_info_t        *cluster_group_info;
+    ngx_http_tfs_cluster_group_info_t        *cluster_group_info2;
     ngx_http_tfs_tair_server_addr_info_t     *dup_server_info;
 
     p = data;
@@ -375,11 +384,14 @@ ngx_http_tfs_parse_rc_info(ngx_http_tfs_rcs_info_t *rc_info_node,
     p += sizeof(uint32_t);
 
     if (rc_info_node->rc_servers_count > 0) {
-        rc_info_node->rc_servers = ngx_slab_alloc_locked(rc_ctx->shpool,
-                                                         rc_info_node->rc_servers_count * sizeof(uint64_t));
+        rc_info_node->rc_servers =
+            ngx_slab_alloc_locked(rc_ctx->shpool,
+                                  rc_info_node->rc_servers_count
+                                   * sizeof(uint64_t));
         if (rc_info_node->rc_servers == NULL) {
             ngx_http_tfs_expire_and_alloc(rc_info_node->rc_servers,
-                                          rc_info_node->rc_servers_count * sizeof(uint64_t));
+                                          rc_info_node->rc_servers_count
+                                           * sizeof(uint64_t));
         }
 
         ngx_memcpy(rc_info_node->rc_servers, p,
@@ -404,13 +416,17 @@ ngx_http_tfs_parse_rc_info(ngx_http_tfs_rcs_info_t *rc_info_node,
                 dup_info_size = len - 1;
                 dup_server_info = &logical_cluster->dup_server_info;
 
-                rc = ngx_http_tfs_parse_tair_server_addr_info(dup_server_info, p,
-                                                              dup_info_size, rc_ctx->shpool, 1);
+                rc = ngx_http_tfs_parse_tair_server_addr_info(dup_server_info,
+                                                              p,
+                                                              dup_info_size,
+                                                              rc_ctx->shpool,
+                                                              1);
                 if (rc == NGX_ERROR) {
                     return NGX_ERROR;
                 }
 
-                logical_cluster->dup_server_addr_hash = ngx_murmur_hash2(p, dup_info_size);
+                logical_cluster->dup_server_addr_hash =
+                    ngx_murmur_hash2(p, dup_info_size);
                 p += dup_info_size + 1;
 
                 rc_info_node->need_duplicate = 1;
@@ -440,13 +456,16 @@ ngx_http_tfs_parse_rc_info(ngx_http_tfs_rcs_info_t *rc_info_node,
             physical_cluster->cluster_id_text.len = len - 1;
             p += sizeof(uint32_t);
 
-            physical_cluster->cluster_id_text.data = ngx_slab_alloc_locked(rc_ctx->shpool,
-                                                   physical_cluster->cluster_id_text.len);
+            physical_cluster->cluster_id_text.data =
+                ngx_slab_alloc_locked(rc_ctx->shpool,
+                                      physical_cluster->cluster_id_text.len);
             if (physical_cluster->cluster_id_text.data == NULL) {
-                ngx_http_tfs_expire_and_alloc(physical_cluster->cluster_id_text.data,
-                                              physical_cluster->cluster_id_text.len);
+                ngx_http_tfs_expire_and_alloc(
+                                         physical_cluster->cluster_id_text.data,
+                                         physical_cluster->cluster_id_text.len);
             }
-            ngx_memcpy(physical_cluster->cluster_id_text.data, p, physical_cluster->cluster_id_text.len);
+            ngx_memcpy(physical_cluster->cluster_id_text.data, p,
+                       physical_cluster->cluster_id_text.len);
             /* this cluster id need get from ns */
             physical_cluster->cluster_id = 0;
             p += physical_cluster->cluster_id_text.len + 1;
@@ -461,17 +480,20 @@ ngx_http_tfs_parse_rc_info(ngx_http_tfs_rcs_info_t *rc_info_node,
             physical_cluster->ns_vip_text.len = len - 1;
             p += sizeof(uint32_t);
 
-            physical_cluster->ns_vip_text.data = ngx_slab_alloc_locked(rc_ctx->shpool,
-                                                                       physical_cluster->ns_vip_text.len);
+            physical_cluster->ns_vip_text.data =
+                ngx_slab_alloc_locked(rc_ctx->shpool,
+                                      physical_cluster->ns_vip_text.len);
             if (physical_cluster->ns_vip_text.data == NULL) {
                 ngx_http_tfs_expire_and_alloc(physical_cluster->ns_vip_text.data,
-                                              physical_cluster->ns_vip_text.len);
+                                             physical_cluster->ns_vip_text.len);
             }
-            ngx_memcpy(physical_cluster->ns_vip_text.data, p, physical_cluster->ns_vip_text.len);
+            ngx_memcpy(physical_cluster->ns_vip_text.data, p,
+                       physical_cluster->ns_vip_text.len);
 
             p += physical_cluster->ns_vip_text.len + 1;
 
-            ngx_http_tfs_parse_inet(&physical_cluster->ns_vip_text, &physical_cluster->ns_vip);
+            ngx_http_tfs_parse_inet(&physical_cluster->ns_vip_text,
+                                    &physical_cluster->ns_vip);
 
             physical_cluster++;
         }
@@ -499,14 +521,17 @@ ngx_http_tfs_parse_rc_info(ngx_http_tfs_rcs_info_t *rc_info_node,
     if (len > 0) {
         rc_info_node->remote_block_cache_info.len = len - 1;
 
-        rc_info_node->remote_block_cache_info.data = ngx_slab_alloc_locked(rc_ctx->shpool,
-                                    rc_info_node->remote_block_cache_info.len);
+        rc_info_node->remote_block_cache_info.data =
+            ngx_slab_alloc_locked(rc_ctx->shpool,
+                                  rc_info_node->remote_block_cache_info.len);
         if (rc_info_node->remote_block_cache_info.data == NULL) {
-            ngx_http_tfs_expire_and_alloc(rc_info_node->remote_block_cache_info.data,
-                                          rc_info_node->remote_block_cache_info.len);
+            ngx_http_tfs_expire_and_alloc(
+                                     rc_info_node->remote_block_cache_info.data,
+                                     rc_info_node->remote_block_cache_info.len);
         }
 
-        ngx_memcpy(rc_info_node->remote_block_cache_info.data, p, len - 1);
+        ngx_memcpy(rc_info_node->remote_block_cache_info.data, p,
+                   len - 1);
         p += len;
     }
 
@@ -544,7 +569,9 @@ ngx_http_tfs_parse_rc_info(ngx_http_tfs_rcs_info_t *rc_info_node,
             group_info->is_master = is_master;
 
         } else {
-            group_info = &cluster_group_info2->group_info[cluster_group_info2->info_count++];
+            group_info =
+              &cluster_group_info2->group_info[cluster_group_info2->info_count];
+            cluster_group_info2->info_count++;
             group_info->is_master = is_master;
         }
 
@@ -558,8 +585,8 @@ ngx_http_tfs_parse_rc_info(ngx_http_tfs_rcs_info_t *rc_info_node,
         group_info->ns_vip_text.len = len - 1;
         p += sizeof(uint32_t);
 
-        group_info->ns_vip_text.data = ngx_slab_alloc_locked(rc_ctx->shpool,
-                                                             group_info->ns_vip_text.len);
+        group_info->ns_vip_text.data =
+            ngx_slab_alloc_locked(rc_ctx->shpool, group_info->ns_vip_text.len);
         if (group_info->ns_vip_text.data == NULL) {
             ngx_http_tfs_expire_and_alloc(group_info->ns_vip_text.data,
                                           group_info->ns_vip_text.len);
@@ -611,7 +638,8 @@ ngx_http_tfs_update_info_node(ngx_http_tfs_t *t, ngx_http_tfs_rc_ctx_t *rc_ctx,
                 if (dup_server_info->server[j].data == NULL) {
                     break;
                 }
-                ngx_slab_free_locked(rc_ctx->shpool, dup_server_info->server[j].data);
+                ngx_slab_free_locked(rc_ctx->shpool,
+                                     dup_server_info->server[j].data);
                 ngx_str_null(&dup_server_info->server[j]);
             }
             logical_cluster->dup_server_addr_hash = -1;
@@ -625,14 +653,18 @@ ngx_http_tfs_update_info_node(ngx_http_tfs_t *t, ngx_http_tfs_rc_ctx_t *rc_ctx,
             {
                 break;
             }
-            ngx_slab_free_locked(rc_ctx->shpool, physical_cluster->cluster_id_text.data);
+            ngx_slab_free_locked(rc_ctx->shpool,
+                                 physical_cluster->cluster_id_text.data);
             ngx_str_null(&physical_cluster->cluster_id_text);
             physical_cluster->cluster_id = 0;
 
-            if (physical_cluster->ns_vip_text.len <= 0 || physical_cluster->ns_vip_text.data == NULL) {
+            if (physical_cluster->ns_vip_text.len <= 0
+                || physical_cluster->ns_vip_text.data == NULL)
+            {
                 break;
             }
-            ngx_slab_free_locked(rc_ctx->shpool, physical_cluster->ns_vip_text.data);
+            ngx_slab_free_locked(rc_ctx->shpool,
+                                 physical_cluster->ns_vip_text.data);
             ngx_str_null(&physical_cluster->ns_vip_text);
 
             physical_cluster++;
@@ -647,8 +679,11 @@ ngx_http_tfs_update_info_node(ngx_http_tfs_t *t, ngx_http_tfs_rc_ctx_t *rc_ctx,
     rc_info_node->need_duplicate = 0;
 
     /* free old remote block cache info */
-    if (rc_info_node->remote_block_cache_info.len > 0 && rc_info_node->remote_block_cache_info.data != NULL) {
-        ngx_slab_free_locked(rc_ctx->shpool, rc_info_node->remote_block_cache_info.data);
+    if (rc_info_node->remote_block_cache_info.len > 0
+        && rc_info_node->remote_block_cache_info.data != NULL)
+    {
+        ngx_slab_free_locked(rc_ctx->shpool,
+                             rc_info_node->remote_block_cache_info.data);
         ngx_str_null(&rc_info_node->remote_block_cache_info);
     }
     rc_info_node->remote_block_cache_info.len = 0;
@@ -658,7 +693,9 @@ ngx_http_tfs_update_info_node(ngx_http_tfs_t *t, ngx_http_tfs_rc_ctx_t *rc_ctx,
     for (i = 0; i < rc_info_node->unlink_cluster_count; i++) {
         for (j = 0; j < cluster_group_info[i].info_count; j++) {
             group_info = &cluster_group_info[i].group_info[j];
-            if (group_info->ns_vip_text.len <= 0 || group_info->ns_vip_text.data == NULL) {
+            if (group_info->ns_vip_text.len <= 0
+                || group_info->ns_vip_text.data == NULL)
+            {
                 break;
             }
             ngx_slab_free_locked(rc_ctx->shpool, group_info->ns_vip_text.data);
@@ -680,7 +717,8 @@ ngx_http_tfs_update_info_node(ngx_http_tfs_t *t, ngx_http_tfs_rc_ctx_t *rc_ctx,
 
 
 static ngx_int_t
-ngx_http_tfs_create_info_node(ngx_http_tfs_t *t, ngx_http_tfs_rc_ctx_t *rc_ctx,
+ngx_http_tfs_create_info_node(ngx_http_tfs_t *t,
+    ngx_http_tfs_rc_ctx_t *rc_ctx,
     u_char *data, ngx_str_t appkey)
 {
     u_char                                   *p;
@@ -704,10 +742,12 @@ ngx_http_tfs_create_info_node(ngx_http_tfs_t *t, ngx_http_tfs_rc_ctx_t *rc_ctx,
 
     node->key = ngx_murmur_hash2(appkey.data, appkey.len);
 
-    rc_info_node->appkey.data = ngx_slab_alloc_locked(rc_ctx->shpool, appkey.len);
+    rc_info_node->appkey.data = ngx_slab_alloc_locked(rc_ctx->shpool,
+                                                      appkey.len);
     if (rc_info_node->appkey.data == NULL) {
         ngx_http_tfs_rc_server_expire(rc_ctx);
-        rc_info_node->appkey.data = ngx_slab_alloc_locked(rc_ctx->shpool, appkey.len);
+        rc_info_node->appkey.data = ngx_slab_alloc_locked(rc_ctx->shpool,
+                                                          appkey.len);
         if (rc_info_node->appkey.data == NULL) {
             goto login_error;
         }
@@ -728,8 +768,8 @@ ngx_http_tfs_create_info_node(ngx_http_tfs_t *t, ngx_http_tfs_rc_ctx_t *rc_ctx,
     rc_info_node->session_id.data = ngx_slab_alloc_locked(rc_ctx->shpool, len);
     if (rc_info_node->session_id.data == NULL) {
         ngx_http_tfs_rc_server_expire(rc_ctx);
-        rc_info_node->session_id.data = ngx_slab_alloc_locked(rc_ctx->shpool,
-                                                              rc_info_node->session_id.len);
+        rc_info_node->session_id.data =
+            ngx_slab_alloc_locked(rc_ctx->shpool, rc_info_node->session_id.len);
         if (rc_info_node->session_id.data == NULL) {
             goto login_error;
         }
@@ -771,7 +811,8 @@ ngx_http_tfs_parse_session_id(ngx_str_t *session_id, uint64_t *app_id)
       return NGX_ERROR;
   }
 
-  return ngx_http_tfs_atoull(session_id->data, ((u_char *)first_pos - session_id->data),
+  return ngx_http_tfs_atoull(session_id->data,
+                             ((u_char *)first_pos - session_id->data),
                              (unsigned long long *) app_id);
 }
 

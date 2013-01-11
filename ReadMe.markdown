@@ -19,6 +19,31 @@
 
 4. make && make install
 
+配置
+====
+
+    http {
+        tfs_upstream tfs_rc {
+            server 127.0.0.1:6100;
+            type rcs;
+            rcs_zone name=tfs1 size=128M;
+            rcs_interface eth0;
+            rcs_heartbeat lock_file=/logs/lk.file interval=10s;
+        }
+        
+        server {
+              listen       7500;
+              server_name  localhost;
+
+              tfs_keepalive max_cached=100 bucket_count=10;
+              tfs_log "pipe:/usr/sbin/cronolog -p 30min /path/to/nginx/logs/cronolog/%Y/%m/%Y-%m-%d-%H-%M-tfs_access.log";
+
+              location / {
+                  tfs_pass tfs://tfs_rc;
+              }
+        }
+    }
+
 指令
 ====
 
@@ -31,7 +56,7 @@ server
 
 **Context**： *tfs_upstream*
 
-指定后端TFS服务器的地址，当指令<i>type</i>为<i>on</i>时为RcServer的地址，否则为NameServer的地址。此指令必须配置。例如:
+指定后端TFS服务器的地址，当指令<i>type</i>为<i>rcs</i>时为RcServer的地址，如果为为<i>ns</i>时为NameServer的地址。此指令必须配置。例如:
 
 	server 10.0.0.1:8108;
 
@@ -40,13 +65,13 @@ type
 
 **Syntax**： *type [ns | rcs]*
 
-**Default**： *name_server*
+**Default**： *ns*
 
 **Context**： *tfs_upstream*
 
-设置server类型，类型只能为ns或者rcs，如果为ns,则指令<i>server</i>指定的地址为NameServer的地址，如果为rcs,则为RcServer的地址。开启此指令需配置RcServer。如需使用自定义文件名功能请设置类型为rcs，使用自定义文件名功能需额外配置MetaServer和RootServer。
+设置server类型，类型只能为ns或者rcs，如果为ns,则指令<i>server</i>指定的地址为NameServer的地址，如果为rcs,则为RcServer的地址。如需使用自定义文件名功能请设置类型为rcs，使用自定义文件名功能需额外配置MetaServer和RootServer。
 
-rc\_zone
+rcs\_zone
 --------------
 
 **Syntax**： *rcs_zone name=n size=num*
@@ -59,10 +84,10 @@ rc\_zone
 
 	rcs_zone name=tfs1 size=128M;
 
-rc\_heartbeat
+rcs\_heartbeat
 --------------
 
-**Syntax**： *rcs_heartbeat lock_file=/path/to/file interval=time enable=[1 | 0]*
+**Syntax**： *rcs_heartbeat lock_file=/path/to/file interval=time*
 
 **Default**： *none*
 
@@ -70,12 +95,12 @@ rc\_heartbeat
 
 配置TFS应用和RcServer的keepalive，应用可通过此功能来和RcServer定期交互，以及时更新其配置信息。若开启RcServer功能（配置了<i>type rcs</i>），则必须配置此指令。例如：
 
-	rcs_heartbeat lock_file=/path/to/nginx/logs/lk.file interval=10s enable=1;
+	rcs_heartbeat lock_file=/path/to/nginx/logs/lk.file interval=10s;
 
-rc\_interface
+rcs\_interface
 ----------------
 
-**Syntax**： *rc\_interface interface*
+**Syntax**： *rcs\_interface interface*
 
 **Default**： *none*
 
@@ -101,7 +126,7 @@ tfs\_upstream
         type rcs;
         rcs_zone name=tfs1 size=128M;
         rcs_interface eth0;
-        rcs_heartbeat lock_file=/logs/lk.file interval=10s enable=1;
+        rcs_heartbeat lock_file=/logs/lk.file interval=10s;
     }
 
    

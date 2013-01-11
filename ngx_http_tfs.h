@@ -58,10 +58,10 @@ typedef struct {
 
 
 typedef struct {
-    u_char                                 file_name[NGX_HTTP_TFS_FILE_NAME_LEN];
-    int64_t                                offset;
-    uint32_t                               size;
-    uint32_t                               crc;
+    u_char    file_name[NGX_HTTP_TFS_FILE_NAME_LEN];
+    int64_t   offset;
+    uint32_t  size;
+    uint32_t  crc;
 } NGX_PACKED ngx_http_tfs_tmp_segment_info_t;
 
 
@@ -69,8 +69,10 @@ struct ngx_http_tfs_segment_data_s {
     uint8_t                                cache_hit;
     ngx_http_tfs_block_info_src_e          block_info_src;
     ngx_http_tfs_segment_info_t            segment_info;
-    uint32_t                               oper_offset; /* read/write offset inside this segment */
-    uint32_t                               oper_size;   /* read/write size inside this segment */
+    /* read/write offset inside this segment */
+    uint32_t                               oper_offset;
+    /* read/write size inside this segment */
+    uint32_t                               oper_size;
     union {
         uint64_t                           write_file_number;
     };
@@ -85,7 +87,8 @@ typedef struct {
     uint8_t                                still_have;  // for custom file
     uint32_t                               cluster_id;
     uint32_t                               open_mode;
-    int64_t                                file_offset;  // not for large_file's data
+    // not for large_file's data
+    int64_t                                file_offset;
     uint64_t                               left_length;
     uint64_t                               file_hole_size;
     uint32_t                               last_write_segment_index;
@@ -96,27 +99,26 @@ typedef struct {
 
 
 struct  ngx_http_tfs_upstream_s {
-    ngx_str_t                                lock_file;
-    ngx_msec_t                               rcs_interval;
+    ngx_str_t                    lock_file;
+    ngx_msec_t                   rcs_interval;
 
-    ngx_flag_t                               rcs_kp_enable;
-    ngx_str_t                                rcs_zone_name;
-    ngx_shm_zone_t                          *rcs_shm_zone;
-    ngx_http_tfs_rc_ctx_t                   *rc_ctx;
+    ngx_str_t                    rcs_zone_name;
+    ngx_shm_zone_t              *rcs_shm_zone;
+    ngx_http_tfs_rc_ctx_t       *rc_ctx;
 
     /* upstream name and port */
-    in_port_t                                port;
-    ngx_str_t                                host;
-    ngx_addr_t                              *ups_addr;
+    in_port_t                    port;
+    ngx_str_t                    host;
+    ngx_addr_t                  *ups_addr;
 
-    struct sockaddr_in                       local_addr;
-    u_char                                   local_addr_text[NGX_INET_ADDRSTRLEN];
+    struct sockaddr_in           local_addr;
+    u_char                       local_addr_text[NGX_INET_ADDRSTRLEN];
 
-    ngx_flag_t                               enable_rcs;
+    ngx_flag_t                   enable_rcs;
 
-    ngx_http_tfs_timers_data_t              *timer_data;
+    ngx_http_tfs_timers_data_t  *timer_data;
 
-    unsigned                                 used:1;
+    unsigned                     used:1;
 };
 
 
@@ -142,34 +144,35 @@ typedef struct {
 
 
 struct  ngx_http_tfs_main_conf_s {
-    ngx_msec_t                               tfs_connect_timeout;
-    ngx_msec_t                               tfs_send_timeout;
-    ngx_msec_t                               tfs_read_timeout;
+    ngx_msec_t                             tfs_connect_timeout;
+    ngx_msec_t                             tfs_send_timeout;
+    ngx_msec_t                             tfs_read_timeout;
 
-    ngx_msec_t                               tair_timeout;
-    ngx_http_tfs_tair_instance_t             dup_instances[NGX_HTTP_TFS_MAX_CLUSTER_COUNT];
+    ngx_msec_t                             tair_timeout;
+    ngx_http_tfs_tair_instance_t           dup_instances[NGX_HTTP_TFS_MAX_CLUSTER_COUNT];
 
-    size_t                                   send_lowat;
-    size_t                                   buffer_size;
-    size_t                                   body_buffer_size;
-    size_t                                   busy_buffers_size;
+    size_t                                 send_lowat;
+    size_t                                 buffer_size;
+    size_t                                 body_buffer_size;
+    size_t                                 busy_buffers_size;
 
-    ngx_shm_zone_t                          *block_cache_shm_zone;
+    ngx_shm_zone_t                        *block_cache_shm_zone;
 
-    ngx_flag_t                               enable_remote_block_cache;
-    ngx_http_tfs_tair_instance_t             remote_block_cache_instance;
-    ngx_http_tfs_local_block_cache_ctx_t    *local_block_cache_ctx;
+    ngx_flag_t                             enable_remote_block_cache;
+    ngx_http_tfs_tair_instance_t           remote_block_cache_instance;
+    ngx_http_tfs_local_block_cache_ctx_t  *local_block_cache_ctx;
 
-    ngx_http_connection_pool_t              *conn_pool;
+    ngx_http_connection_pool_t            *conn_pool;
 
-    uint32_t                                 cluster_id;
+    uint32_t                               cluster_id;
 
-    ngx_array_t                              upstreams;
+    ngx_array_t                            upstreams;
 };
 
 
 typedef ngx_int_t (*tfs_peer_handler_pt)(ngx_http_tfs_t *t);
-typedef void (*ngx_http_tfs_handler_pt)(ngx_http_request_t *r, ngx_http_tfs_t *t);
+typedef void (*ngx_http_tfs_handler_pt)(ngx_http_request_t *r,
+    ngx_http_tfs_t *t);
 typedef ngx_int_t (*ngx_http_tfs_sub_process_pt)(ngx_http_tfs_t *t);
 
 
@@ -332,7 +335,8 @@ struct ngx_http_tfs_s {
     unsigned                          header_only:1;
     unsigned                          header_sent:1;
     unsigned                          has_split_frag:1;
-    unsigned                          is_first_segment:1;  /* for custrom file read */
+    /* for custrom file read */
+    unsigned                          is_first_segment:1;
 
     unsigned                          use_dedup:1;
     unsigned                          is_stat_dup_file:1;
@@ -355,7 +359,8 @@ void ngx_http_tfs_remove_block_cache(ngx_http_tfs_t *t,
     ngx_http_tfs_segment_data_t *segment_data);
 ngx_int_t ngx_http_tfs_set_output_appid(ngx_http_tfs_t *t, uint64_t app_id);
 void ngx_http_tfs_set_custom_initial_parameters(ngx_http_tfs_t *t);
-ngx_int_t ngx_http_tfs_misc_ctx_init(ngx_http_tfs_t *t, ngx_http_tfs_rcs_info_t *rc_node);
+ngx_int_t ngx_http_tfs_misc_ctx_init(ngx_http_tfs_t *t,
+    ngx_http_tfs_rcs_info_t *rc_node);
 ngx_int_t ngx_http_tfs_batch_process_start(ngx_http_tfs_t *t);
 ngx_int_t ngx_http_tfs_batch_process_end(ngx_http_tfs_t *t);
 ngx_int_t ngx_http_tfs_batch_process_next(ngx_http_tfs_t *t);

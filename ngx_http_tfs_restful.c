@@ -171,7 +171,8 @@ ngx_http_restful_parse_custom_name(ngx_http_request_t *r,
             break;
         case sw_appid:
             if (ch == '/') {
-                rc = ngx_http_tfs_atoull(start, p - start, (unsigned long long *)&ctx->app_id);
+                rc = ngx_http_tfs_atoull(start, p - start,
+                                         (unsigned long long *)&ctx->app_id);
                 if (rc == NGX_ERROR || ctx->app_id == 0) {
                     return NGX_ERROR;
                 }
@@ -182,7 +183,8 @@ ngx_http_restful_parse_custom_name(ngx_http_request_t *r,
             }
 
             if (ch < '0' || ch > '9') {
-                ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "appid is invalid");
+                ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                              "appid is invalid");
                 return NGX_ERROR;
             }
 
@@ -193,7 +195,8 @@ ngx_http_restful_parse_custom_name(ngx_http_request_t *r,
             break;
         case sw_uid:
             if (ch == '/') {
-                rc = ngx_http_tfs_atoull(start, p - start, (unsigned long long *)&ctx->user_id);
+                rc = ngx_http_tfs_atoull(start, p - start,
+                                         (unsigned long long *)&ctx->user_id);
                 if (rc == NGX_ERROR || ctx->user_id == 0) {
                     return NGX_ERROR;
                 }
@@ -203,12 +206,14 @@ ngx_http_restful_parse_custom_name(ngx_http_request_t *r,
             }
 
             if (ch < '0' || ch > '9') {
-                ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "userid is invalid");
+                ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                              "userid is invalid");
                 return NGX_ERROR;
             }
 
             if ((size_t) (p - start) > NGX_INT64_LEN - 1) {
-                ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "userid is too big");
+                ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                              "userid is too big");
                 return NGX_ERROR;
             }
             break;
@@ -255,7 +260,8 @@ ngx_http_restful_parse_custom_name(ngx_http_request_t *r,
 
 
 static ngx_int_t
-ngx_http_restful_parse_uri(ngx_http_request_t *r, ngx_http_tfs_restful_ctx_t *ctx)
+ngx_http_restful_parse_uri(ngx_http_request_t *r,
+    ngx_http_tfs_restful_ctx_t *ctx)
 {
     u_char         *p, ch, *last;
 
@@ -320,7 +326,8 @@ ngx_http_restful_parse_uri(ngx_http_request_t *r, ngx_http_tfs_restful_ctx_t *ct
 
 
 static ngx_int_t
-ngx_http_restful_parse_action(ngx_http_request_t *r, ngx_http_tfs_restful_ctx_t *ctx)
+ngx_http_restful_parse_action(ngx_http_request_t *r,
+    ngx_http_tfs_restful_ctx_t *ctx)
 {
     ngx_int_t       rc;
     ngx_str_t       arg_value, file_path_d, file_temp_path;
@@ -346,10 +353,13 @@ ngx_http_restful_parse_action(ngx_http_request_t *r, ngx_http_tfs_restful_ctx_t 
                 return NGX_HTTP_BAD_REQUEST;
             }
 
-            if (ngx_http_arg(r, (u_char *) "check_hole", 10, &arg_value) == NGX_OK) {
+            if (ngx_http_arg(r, (u_char *) "check_hole", 10, &arg_value)
+                == NGX_OK)
+            {
                 ctx->chk_file_hole = ngx_atoi(arg_value.data, arg_value.len);
                 if (ctx->chk_file_hole == NGX_ERROR
-                    || (ctx->chk_file_hole != NGX_HTTP_TFS_NO && ctx->chk_file_hole != NGX_HTTP_TFS_YES))
+                    || (ctx->chk_file_hole != NGX_HTTP_TFS_NO
+                        && ctx->chk_file_hole != NGX_HTTP_TFS_YES))
                 {
                     return NGX_HTTP_BAD_REQUEST;
                 }
@@ -363,7 +373,8 @@ ngx_http_restful_parse_action(ngx_http_request_t *r, ngx_http_tfs_restful_ctx_t 
             }
 
             if (ngx_http_arg(r, (u_char *) "size", 4, &arg_value) == NGX_OK) {
-                rc = ngx_http_tfs_atoull(arg_value.data, arg_value.len, (unsigned long long *)&ctx->size);
+                rc = ngx_http_tfs_atoull(arg_value.data, arg_value.len,
+                                         (unsigned long long *)&ctx->size);
                 if (rc == NGX_ERROR) {
                     return NGX_HTTP_BAD_REQUEST;
                 }
@@ -386,7 +397,8 @@ ngx_http_restful_parse_action(ngx_http_request_t *r, ngx_http_tfs_restful_ctx_t 
             == NGX_OK)
         {
             ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
-                          "move from %V to %V", &file_path_d, &ctx->file_path_s);
+                          "move from %V to %V",
+                          &file_path_d, &ctx->file_path_s);
 
             if (file_path_d.len < 1
                 || file_path_d.len > NGX_HTTP_TFS_MAX_FILE_NAME_LEN)
@@ -394,8 +406,8 @@ ngx_http_restful_parse_action(ngx_http_request_t *r, ngx_http_tfs_restful_ctx_t 
                 return NGX_HTTP_BAD_REQUEST;
             }
             if (ctx->file_path_s.len == file_path_d.len
-                && ngx_strncmp(ctx->file_path_s.data, file_path_d.data, file_path_d.len)
-                   == 0)
+                && ngx_strncmp(ctx->file_path_s.data, file_path_d.data,
+                               file_path_d.len) == 0)
             {
                 return NGX_HTTP_BAD_REQUEST;
             }
@@ -427,7 +439,8 @@ ngx_http_restful_parse_action(ngx_http_request_t *r, ngx_http_tfs_restful_ctx_t 
             }
             ctx->recursive = ngx_atoi(arg_value.data, arg_value.len);
             if (ctx->recursive == NGX_ERROR
-                || (ctx->recursive != NGX_HTTP_TFS_NO && ctx->recursive != NGX_HTTP_TFS_YES))
+                || (ctx->recursive != NGX_HTTP_TFS_NO
+                    && ctx->recursive != NGX_HTTP_TFS_YES))
             {
                 return NGX_HTTP_BAD_REQUEST;
             }
@@ -448,7 +461,8 @@ ngx_http_restful_parse_action(ngx_http_request_t *r, ngx_http_tfs_restful_ctx_t 
             }
             return NGX_OK;
         }
-        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "put method is forbid in dir");
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                      "put method is forbid in dir");
         return NGX_ERROR;
     case NGX_HTTP_DELETE:
         if (ctx->file_type == NGX_HTTP_TFS_CUSTOM_FT_FILE) {
@@ -480,7 +494,8 @@ ngx_http_restful_parse_action(ngx_http_request_t *r, ngx_http_tfs_restful_ctx_t 
 
 
 static ngx_int_t
-ngx_http_restful_parse_action_raw(ngx_http_request_t *r, ngx_http_tfs_restful_ctx_t *ctx)
+ngx_http_restful_parse_action_raw(ngx_http_request_t *r,
+    ngx_http_tfs_restful_ctx_t *ctx)
 {
     ngx_int_t       rc;
     ngx_str_t       arg_value;
@@ -526,7 +541,9 @@ ngx_http_restful_parse_action_raw(ngx_http_request_t *r, ngx_http_tfs_restful_ct
             }
 
             if (ngx_http_arg(r, (u_char *) "size", 4, &arg_value) == NGX_OK) {
-                rc = ngx_http_tfs_atoull(arg_value.data, arg_value.len, (unsigned long long *)&ctx->size);
+                rc = ngx_http_tfs_atoull(arg_value.data,
+                                         arg_value.len,
+                                         (unsigned long long *)&ctx->size);
                 if (rc == NGX_ERROR) {
                     return NGX_HTTP_BAD_REQUEST;
                 }
@@ -548,37 +565,46 @@ ngx_http_restful_parse_action_raw(ngx_http_request_t *r, ngx_http_tfs_restful_ct
             ctx->file_suffix = arg_value;
         }
 
-        if (ngx_http_arg(r, (u_char *) "simple_name", 11, &arg_value) == NGX_OK) {
+        if (ngx_http_arg(r, (u_char *) "simple_name", 11, &arg_value)
+            == NGX_OK)
+        {
             if (arg_value.len != 1) {
                 return NGX_HTTP_BAD_REQUEST;
             }
             ctx->simple_name = ngx_atoi(arg_value.data, arg_value.len);
             if (ctx->simple_name == NGX_ERROR
-                || (ctx->simple_name != NGX_HTTP_TFS_NO && ctx->simple_name != NGX_HTTP_TFS_YES))
+                || (ctx->simple_name != NGX_HTTP_TFS_NO
+                    && ctx->simple_name != NGX_HTTP_TFS_YES))
             {
                 return NGX_HTTP_BAD_REQUEST;
             }
         }
 
-        if (ngx_http_arg(r, (u_char *) "large_file", 10, &arg_value) == NGX_OK) {
+        if (ngx_http_arg(r, (u_char *) "large_file", 10, &arg_value)
+            == NGX_OK)
+        {
             if (arg_value.len != 1) {
                 return NGX_HTTP_BAD_REQUEST;
             }
             ctx->large_file = ngx_atoi(arg_value.data, arg_value.len);
             if (ctx->large_file == NGX_ERROR
-                || (ctx->large_file != NGX_HTTP_TFS_NO && ctx->large_file != NGX_HTTP_TFS_YES))
+                || (ctx->large_file != NGX_HTTP_TFS_NO
+                    && ctx->large_file != NGX_HTTP_TFS_YES))
             {
                 return NGX_HTTP_BAD_REQUEST;
             }
         }
 
-        if (ngx_http_arg(r, (u_char *) "meta_segment", 12, &arg_value) == NGX_OK) {
+        if (ngx_http_arg(r, (u_char *) "meta_segment", 12, &arg_value)
+            == NGX_OK)
+        {
             if (arg_value.len != 1) {
                 return NGX_HTTP_BAD_REQUEST;
             }
             ctx->write_meta_segment = ngx_atoi(arg_value.data, arg_value.len);
             if (ctx->write_meta_segment == NGX_ERROR
-                || (ctx->write_meta_segment != NGX_HTTP_TFS_NO && ctx->write_meta_segment != NGX_HTTP_TFS_YES))
+                || (ctx->write_meta_segment != NGX_HTTP_TFS_NO
+                    && ctx->write_meta_segment != NGX_HTTP_TFS_YES))
             {
                 return NGX_HTTP_BAD_REQUEST;
             }
@@ -590,7 +616,8 @@ ngx_http_restful_parse_action_raw(ngx_http_request_t *r, ngx_http_tfs_restful_ct
             }
             ctx->no_dedup = ngx_atoi(arg_value.data, arg_value.len);
             if (ctx->no_dedup == NGX_ERROR
-                || (ctx->no_dedup != NGX_HTTP_TFS_NO && ctx->no_dedup != NGX_HTTP_TFS_YES))
+                || (ctx->no_dedup != NGX_HTTP_TFS_NO
+                    && ctx->no_dedup != NGX_HTTP_TFS_YES))
             {
                 return NGX_HTTP_BAD_REQUEST;
             }
@@ -651,7 +678,9 @@ ngx_http_restful_parse_action_raw(ngx_http_request_t *r, ngx_http_tfs_restful_ct
         }
 
         /* large file not support UNDELETE */
-        if (ctx->fsname.file_type == NGX_HTTP_TFS_LARGE_FILE_TYPE && ctx->unlink_type == 2) {
+        if ((ctx->fsname.file_type == NGX_HTTP_TFS_LARGE_FILE_TYPE)
+            && ctx->unlink_type == 2)
+        {
             return NGX_HTTP_BAD_REQUEST;
         }
 
@@ -664,13 +693,16 @@ ngx_http_restful_parse_action_raw(ngx_http_request_t *r, ngx_http_tfs_restful_ct
             ctx->file_suffix = arg_value;
         }
 
-        if (ngx_http_arg(r, (u_char *) "simple_name", 11, &arg_value) == NGX_OK) {
+        if (ngx_http_arg(r, (u_char *) "simple_name", 11, &arg_value)
+            == NGX_OK)
+        {
             if (arg_value.len != 1) {
                 return NGX_HTTP_BAD_REQUEST;
             }
             ctx->simple_name = ngx_atoi(arg_value.data, arg_value.len);
             if (ctx->simple_name == NGX_ERROR
-                || (ctx->simple_name != NGX_HTTP_TFS_NO && ctx->simple_name != NGX_HTTP_TFS_YES))
+                || (ctx->simple_name != NGX_HTTP_TFS_NO
+                    && ctx->simple_name != NGX_HTTP_TFS_YES))
             {
                 return NGX_HTTP_BAD_REQUEST;
             }
@@ -683,7 +715,9 @@ ngx_http_restful_parse_action_raw(ngx_http_request_t *r, ngx_http_tfs_restful_ct
         rc = ngx_http_tfs_raw_fsname_parse(&ctx->file_path_s, &ctx->file_suffix,
                                            &ctx->fsname);
         /* large file not support update */
-        if (rc != NGX_OK || ctx->fsname.file_type == NGX_HTTP_TFS_LARGE_FILE_TYPE) {
+        if (rc != NGX_OK
+            || (ctx->fsname.file_type == NGX_HTTP_TFS_LARGE_FILE_TYPE))
+        {
             return NGX_HTTP_BAD_REQUEST;
         }
 

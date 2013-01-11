@@ -45,7 +45,8 @@ ngx_http_tfs_timers_init(ngx_cycle_t *cycle,
 
 #if defined(nginx_version) && (nginx_version > 1001008)
 
-    if (ngx_shmtx_create(&lock->ngx_http_tfs_kp_mutex, (ngx_shmtx_sh_t *) shared, lock_file)
+    if (ngx_shmtx_create(&lock->ngx_http_tfs_kp_mutex,
+                         (ngx_shmtx_sh_t *) shared, lock_file)
         != NGX_OK)
     {
         return NULL;
@@ -65,11 +66,13 @@ ngx_http_tfs_timers_init(ngx_cycle_t *cycle,
 
 
 ngx_int_t
-ngx_http_tfs_add_rcs_timers(ngx_cycle_t *cycle, ngx_http_tfs_timers_data_t *data)
+ngx_http_tfs_add_rcs_timers(ngx_cycle_t *cycle,
+    ngx_http_tfs_timers_data_t *data)
 {
     ngx_event_t                      *ev;
 
-    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, cycle->log, 0, "http check tfs rc servers");
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, cycle->log, 0,
+                   "http check tfs rc servers");
 
     ev = ngx_pcalloc(cycle->pool, sizeof(ngx_event_t));
     if (ev == NULL) {
@@ -117,7 +120,8 @@ ngx_http_tfs_timeout_handler(ngx_event_t *event)
     data = event->data;
     if (ngx_shmtx_trylock(&data->lock->ngx_http_tfs_kp_mutex)) {
         if (ngx_queue_empty(&data->upstream->rc_ctx->sh->kp_queue)) {
-            ngx_log_debug0(NGX_LOG_DEBUG_EVENT, event->log, 0, "empty rc keepalive queue");
+            ngx_log_debug0(NGX_LOG_DEBUG_EVENT, event->log, 0,
+                           "empty rc keepalive queue");
             ngx_shmtx_unlock(&data->lock->ngx_http_tfs_kp_mutex);
             ngx_add_timer(event, data->upstream->rcs_interval);
             return;
@@ -143,7 +147,8 @@ ngx_http_tfs_timeout_handler(ngx_event_t *event)
             return;
         }
         r->connection->log = event->log;
-        r->connection->destroyed = 1;     /* in order to return from ngx_http_run_posted_requests()  */
+        /* in order to return from ngx_http_run_posted_requests()  */
+        r->connection->destroyed = 1;
 
         t = ngx_pcalloc(pool, sizeof(ngx_http_tfs_t));
         if (t == NULL) {
@@ -174,6 +179,7 @@ ngx_http_tfs_timeout_handler(ngx_event_t *event)
         }
 
     } else {
-        ngx_log_debug0(NGX_LOG_DEBUG_EVENT, event->log, 0, "tfs kp mutex lock failed");
+        ngx_log_debug0(NGX_LOG_DEBUG_EVENT, event->log, 0,
+                       "tfs kp mutex lock failed");
     }
 }

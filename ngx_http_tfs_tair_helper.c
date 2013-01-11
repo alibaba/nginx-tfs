@@ -142,7 +142,8 @@ ngx_http_tfs_tair_delete_helper(ngx_http_tfs_tair_instance_t *instance,
 
 
 ngx_int_t
-ngx_http_tfs_parse_tair_server_addr_info(ngx_http_tfs_tair_server_addr_info_t *info,
+ngx_http_tfs_parse_tair_server_addr_info(
+    ngx_http_tfs_tair_server_addr_info_t *info,
     u_char *addr, uint32_t len, void *pool, uint8_t shared_memory)
 {
     u_char           *temp, *p;
@@ -159,7 +160,8 @@ ngx_http_tfs_parse_tair_server_addr_info(ngx_http_tfs_tair_server_addr_info_t *i
 
         info_size = temp - p;
         if (shared_memory) {
-            info->server[i].data = ngx_slab_alloc_locked((ngx_slab_pool_t *)pool, info_size);
+            info->server[i].data =
+                ngx_slab_alloc_locked((ngx_slab_pool_t *)pool, info_size);
         } else {
             info->server[i].data = ngx_pcalloc((ngx_pool_t *)pool, info_size);
         }
