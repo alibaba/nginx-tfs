@@ -1,7 +1,7 @@
 名称
 ====
 
-* tfs_module
+* nginx-tfs
 
 描述
 ====
