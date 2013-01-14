@@ -14,10 +14,6 @@
 
 #define NGX_HTTP_TFS_BLOCK_CACHE_KEY_SIZE       \
     sizeof(ngx_http_tfs_block_cache_key_t)
-#define NGX_HTTP_TFS_BLOCK_CACHE_ITEM_SIZE                              \
-    (offsetof(ngx_rbtree_node_t, color)                                 \
-        + offsetof(ngx_http_tfs_block_cache_node_t, data)               \
-        + 2 * sizeof(uint64_t))
 
 #define NGX_HTTP_TFS_REMOTE_BLOCK_CACHE_VALUE_BASE_SIZE sizeof(uint32_t)
 

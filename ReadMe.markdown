@@ -121,7 +121,7 @@ tfs\_upstream
 
 配置TFS模块的server信息,这个块包括上面几个命令。例如：
 
-    tfs_upstream tfs {
+    tfs_upstream tfs_rc {
         server 127.0.0.1:6100;
         type rcs;
         rcs_zone name=tfs1 size=128M;
@@ -142,11 +142,11 @@ tfs_pass
 是否打开TFS模块功能，此指令为关键指令，决定请求是否由TFS模块处理，必须配置。需要注意，这里不支持直接写ip地址或者域名，这里只支持指令<i>tfs_upstream name {...} </i>配置的upstream,并且必须以 tfs:// 开头。例如：
 
 
-	tfs_upstream tfs {
+	tfs_upstream tfs_rc {
     };
 
 	location / {
-		tfs_pass tfs://tfs;
+		tfs_pass tfs://tfs_rc;
 	}
 
 tfs_keepalive
