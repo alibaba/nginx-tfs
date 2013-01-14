@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2010-2012 Alibaba Group Holding Limited
+ * Copyright (C) 2010-2013 Alibaba Group Holding Limited
  */
 
 
@@ -24,13 +24,17 @@
 #define NGX_HTTP_TFS_RCS_LOCK_FILE                    "nginx_rcs.lock"
 
 #define NGX_HTTP_TFS_MD5_RESULT_LEN                   16
-#define NGX_HTTP_TFS_DUPLICATE_KEY_SIZE               (sizeof(uint32_t) + NGX_HTTP_TFS_MD5_RESULT_LEN)
+#define NGX_HTTP_TFS_DUPLICATE_KEY_SIZE             \
+    (sizeof(uint32_t) + NGX_HTTP_TFS_MD5_RESULT_LEN)
 #define NGX_HTTP_TFS_DUPLICATE_VALUE_BASE_SIZE        sizeof(int32_t)
 #define NGX_HTTP_TFS_DUPLICATE_INITIAL_MAGIC_VERSION  0x0fffffff
 
-#define NGX_HTTP_TFS_SERVER_COUNT                     5            /* rcs, ns, ds, rs, ms */
-#define NGX_HTTP_TFS_TAIR_SERVER_ADDR_PART_COUNT      3            /* master_conifg_server;slave_config_server;group */
-#define NGX_HTTP_TFS_TAIR_CONFIG_SERVER_COUNT         2            /* master && slave */
+/* rcs, ns, ds, rs, ms */
+#define NGX_HTTP_TFS_SERVER_COUNT                     5
+/* master_conifg_server;slave_config_server;group */
+#define NGX_HTTP_TFS_TAIR_SERVER_ADDR_PART_COUNT      3
+/* master && slave */
+#define NGX_HTTP_TFS_TAIR_CONFIG_SERVER_COUNT         2
 
 #define NGX_HTTP_TFS_KEEPALIVE_ACTION                 "keepalive"
 
@@ -60,7 +64,8 @@
 #define NGX_HTTP_TFS_CMD_GET_GROUP_COUNT               22
 #define NGX_HTTP_TFS_CMD_GET_GROUP_SEQ                 23
 
-#define NGX_HTTP_TFS_GMT_TIME_SIZE                     (sizeof("Mon, 28 Sep 1970 06:00:00 UTC+0800") - 1)
+#define NGX_HTTP_TFS_GMT_TIME_SIZE                  \
+    (sizeof("Mon, 28 Sep 1970 06:00:00 UTC+0800") - 1)
 
 #define NGX_HTTP_TFS_MAX_FRAGMENT_SIZE                 (2 * 1024 * 1024)
 #define NGX_HTTP_TFS_MAX_SEND_FRAG_COUNT               8
@@ -86,8 +91,8 @@
     | (((x) & 0x00000000000000ffull) << 56))
 
 #define ngx_http_tfs_clear_buf(b) \
-    b->pos = b->start;            \
-    b->last = b->start;
+    (b)->pos = (b)->start;        \
+    (b)->last = (b)->start;
 
 #if (NGX_HAVE_BIG_ENDIAN)
 
@@ -109,10 +114,17 @@
 typedef struct ngx_http_tfs_s ngx_http_tfs_t;
 typedef struct ngx_http_tfs_peer_connection_s ngx_http_tfs_peer_connection_t;
 
+typedef struct ngx_http_tfs_main_conf_s ngx_http_tfs_main_conf_t;
+typedef struct ngx_http_tfs_loc_conf_s ngx_http_tfs_loc_conf_t;
+typedef struct ngx_http_tfs_upstream_s ngx_http_tfs_upstream_t;
+
 typedef struct ngx_http_tfs_inet_s ngx_http_tfs_inet_t;
 typedef struct ngx_http_tfs_meta_hh_s  ngx_http_tfs_meta_hh_t;
 
 typedef struct ngx_http_tfs_segment_data_s ngx_http_tfs_segment_data_t;
+
+typedef struct ngx_http_tfs_timers_lock_s ngx_http_tfs_timers_lock_t;
+typedef struct ngx_http_tfs_timers_data_s ngx_http_tfs_timers_data_t;
 
 typedef struct {
     uint64_t           size;
@@ -197,7 +209,7 @@ typedef enum {
 } ngx_http_tfs_state_remove_e;
 
 
-typedef enum {	
+typedef enum {
     NGX_HTTP_TFS_STATE_STAT_START = 0,
     NGX_HTTP_TFS_STATE_STAT_GET_BLK_INFO,
     NGX_HTTP_TFS_STATE_STAT_STAT_FILE,
@@ -246,18 +258,24 @@ ngx_int_t ngx_http_tfs_parse_inet(ngx_str_t *u, ngx_http_tfs_inet_t *addr);
 int32_t ngx_http_tfs_raw_fsname_hash(const u_char *str, const int32_t len);
 ngx_int_t ngx_http_tfs_get_local_ip(ngx_str_t device, struct sockaddr_in *addr);
 ngx_buf_t *ngx_http_tfs_copy_buf_chain(ngx_pool_t *pool, ngx_chain_t *in);
-ngx_int_t ngx_http_tfs_sum_md5(ngx_chain_t *body, u_char *md5_final, ssize_t *body_size, ngx_log_t *log);
+ngx_int_t ngx_http_tfs_sum_md5(ngx_chain_t *body, u_char *md5_final,
+    ssize_t *body_size, ngx_log_t *log);
 u_char *ngx_http_tfs_time(u_char *buf, time_t t);
 
-ngx_int_t ngx_http_tfs_status_message(ngx_buf_t *b, ngx_str_t *action, ngx_log_t *log);
-ngx_int_t ngx_http_tfs_get_parent_dir(ngx_str_t *file_path, ngx_int_t *dir_level);
+ngx_int_t ngx_http_tfs_status_message(ngx_buf_t *b, ngx_str_t *action,
+    ngx_log_t *log);
+ngx_int_t ngx_http_tfs_get_parent_dir(ngx_str_t *file_path,
+    ngx_int_t *dir_level);
 ngx_int_t ngx_http_tfs_set_output_file_name(ngx_http_tfs_t *t);
 long long ngx_http_tfs_atoll(u_char *line, size_t n);
-ngx_int_t ngx_http_tfs_atoull(u_char *line, size_t n, unsigned long long *value);
-void *ngx_http_tfs_prealloc(ngx_pool_t *pool, void *p, size_t old_size, size_t new_size);
+ngx_int_t ngx_http_tfs_atoull(u_char *line, size_t n,
+    unsigned long long *value);
+void *ngx_http_tfs_prealloc(ngx_pool_t *pool, void *p, size_t old_size,
+    size_t new_size);
 uint64_t ngx_http_tfs_get_chain_buf_size(ngx_chain_t *data);
 
-void ngx_http_tfs_dump_segment_data(ngx_http_tfs_segment_data_t *segment, ngx_log_t *log);
+void ngx_http_tfs_dump_segment_data(ngx_http_tfs_segment_data_t *segment,
+    ngx_log_t *log);
 ngx_http_tfs_t *ngx_http_tfs_alloc_st(ngx_http_tfs_t *t);
 
 #define ngx_http_tfs_free_st(t)           \

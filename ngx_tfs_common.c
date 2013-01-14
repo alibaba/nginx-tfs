@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2010-2012 Alibaba Group Holding Limited
+ * Copyright (C) 2010-2013 Alibaba Group Holding Limited
  */
 
 
@@ -194,8 +194,10 @@ ngx_http_tfs_compute_buf_crc(ngx_http_tfs_crc_t *t_crc, ngx_buf_t *b,
     ssize_t              n;
 
     if (ngx_buf_in_memory(b)) {
-        t_crc->crc = ngx_http_tfs_crc(t_crc->crc, (const char *) (b->pos), size);
-        t_crc->data_crc = ngx_http_tfs_crc(t_crc->data_crc, (const char *) (b->pos), size);
+        t_crc->crc = ngx_http_tfs_crc(t_crc->crc,
+                                      (const char *) (b->pos), size);
+        t_crc->data_crc = ngx_http_tfs_crc(t_crc->data_crc,
+                                           (const char *) (b->pos), size);
         return NGX_OK;
     }
 
@@ -218,7 +220,8 @@ ngx_http_tfs_compute_buf_crc(ngx_http_tfs_crc_t *t_crc, ngx_buf_t *b,
     }
 
     t_crc->crc = ngx_http_tfs_crc(t_crc->crc, (const char *) dst, size);
-    t_crc->data_crc = ngx_http_tfs_crc(t_crc->data_crc, (const char *) dst, size);
+    t_crc->data_crc = ngx_http_tfs_crc(t_crc->data_crc,
+                                       (const char *) dst, size);
     free(dst);
 
     b->file_last = b->file_pos + n;
@@ -351,7 +354,6 @@ ngx_http_tfs_raw_fsname_hash(const u_char *str, const int32_t len)
     int32_t h, i;
 
     h = 0;
-    i = 0;
 
     if (str == NULL || len <=0) {
         return 0;
@@ -445,7 +447,8 @@ ngx_http_tfs_sum_md5(ngx_chain_t *data, u_char *md5_final,
                 return NGX_ERROR;
             }
 
-            n = ngx_read_file(data->buf->file, buf, buf_size, data->buf->file_pos);
+            n = ngx_read_file(data->buf->file, buf,
+                              buf_size, data->buf->file_pos);
             if (n == NGX_ERROR) {
                 free(buf);
                 return NGX_ERROR;
@@ -510,7 +513,8 @@ ngx_http_tfs_status_message(ngx_buf_t *b, ngx_str_t *action, ngx_log_t *log)
         }
 
         ngx_log_error(NGX_LOG_ERR, log, 0,
-                      "%V failed error code (%d) err_msg(%V)", action, code, &err);
+                      "%V failed error code (%d) err_msg(%V)",
+                      action, code, &err);
         if (code <= NGX_HTTP_TFS_EXIT_GENERAL_ERROR) {
             return code;
         }
@@ -573,7 +577,9 @@ ngx_http_tfs_set_output_file_name(ngx_http_tfs_t *t)
     }
     t->file_name.data = ngx_palloc(t->pool, t->file_name.len);
     ngx_memcpy(t->file_name.data,
-               ngx_http_tfs_raw_fsname_get_name(&t->r_ctx.fsname, t->is_large_file, t->r_ctx.simple_name),
+               ngx_http_tfs_raw_fsname_get_name(&t->r_ctx.fsname,
+                                                t->is_large_file,
+                                                t->r_ctx.simple_name),
                NGX_HTTP_TFS_FILE_NAME_LEN);
     if (t->r_ctx.file_suffix.data != NULL) {
         ngx_memcpy(t->file_name.data + NGX_HTTP_TFS_FILE_NAME_LEN,
@@ -582,8 +588,10 @@ ngx_http_tfs_set_output_file_name(ngx_http_tfs_t *t)
 
     /* set dup_file_name(put to tair) */
     if (t->use_dedup) {
-        t->dedup_ctx.dup_file_name.len = NGX_HTTP_TFS_FILE_NAME_LEN + t->r_ctx.file_suffix.len;
-        t->dedup_ctx.dup_file_name.data = ngx_palloc(t->pool, t->dedup_ctx.dup_file_name.len);
+        t->dedup_ctx.dup_file_name.len =
+            NGX_HTTP_TFS_FILE_NAME_LEN + t->r_ctx.file_suffix.len;
+        t->dedup_ctx.dup_file_name.data =
+            ngx_palloc(t->pool, t->dedup_ctx.dup_file_name.len);
         if (t->dedup_ctx.dup_file_name.data == NULL) {
             return NGX_ERROR;
         }
@@ -591,7 +599,8 @@ ngx_http_tfs_set_output_file_name(ngx_http_tfs_t *t)
                    ngx_http_tfs_raw_fsname_get_name(&t->r_ctx.fsname, 0, 0),
                    NGX_HTTP_TFS_FILE_NAME_LEN);
         if (t->r_ctx.file_suffix.data != NULL) {
-            ngx_memcpy(t->dedup_ctx.dup_file_name.data + NGX_HTTP_TFS_FILE_NAME_LEN,
+            ngx_memcpy(t->dedup_ctx.dup_file_name.data
+                       + NGX_HTTP_TFS_FILE_NAME_LEN,
                        t->r_ctx.file_suffix.data, t->r_ctx.file_suffix.len);
         }
     }
@@ -667,7 +676,8 @@ ngx_http_tfs_atoull(u_char *line, size_t n, unsigned long long *value)
 
 
 void *
-ngx_http_tfs_prealloc(ngx_pool_t *pool, void *p, size_t old_size, size_t new_size)
+ngx_http_tfs_prealloc(ngx_pool_t *pool, void *p,
+    size_t old_size, size_t new_size)
 {
     void *new;
 
@@ -723,14 +733,20 @@ ngx_http_tfs_get_chain_buf_size(ngx_chain_t *data)
 
 
 void
-ngx_http_tfs_dump_segment_data(ngx_http_tfs_segment_data_t *segment, ngx_log_t *log)
+ngx_http_tfs_dump_segment_data(ngx_http_tfs_segment_data_t *segment,
+    ngx_log_t *log)
 {
-    ngx_log_debug7(NGX_LOG_DEBUG_HTTP, log, 0, "=========dump segment data=========\n"
-                   "block id: %uD, file id: %uL, offset: %L, size: %uL, crc: %uD, "
+    ngx_log_debug7(NGX_LOG_DEBUG_HTTP, log, 0,
+                   "=========dump segment data=========\n"
+                   "block id: %uD, file id: %uL, "
+                   "offset: %L, size: %uL, crc: %uD, "
                    "oper_offset: %uD, oper_size: %uL",
-                   segment->segment_info.block_id, segment->segment_info.file_id,
-                   segment->segment_info.offset, segment->segment_info.size,
-                   segment->segment_info.crc, segment->oper_offset,
+                   segment->segment_info.block_id,
+                   segment->segment_info.file_id,
+                   segment->segment_info.offset,
+                   segment->segment_info.size,
+                   segment->segment_info.crc,
+                   segment->oper_offset,
                    segment->oper_size);
 }
 
@@ -808,5 +824,4 @@ ngx_http_tfs_alloc_st(ngx_http_tfs_t *t)
 
     return st;
 }
-
 

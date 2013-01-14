@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2010-2012 Alibaba Group Holding Limited
+ * Copyright (C) 2010-2013 Alibaba Group Holding Limited
  */
 
 
@@ -17,7 +17,8 @@
 #define NGX_HTTP_TFS_READ_V2                1
 
 #define NGX_HTTP_TFS_RAW_FILE_INFO_SIZE     sizeof(ngx_http_tfs_raw_file_info_t)
-#define NGX_HTTP_TFS_READ_V2_TAIL_LEN       sizeof(ngx_http_tfs_ds_readv2_response_tail_t)
+#define NGX_HTTP_TFS_READ_V2_TAIL_LEN           \
+    sizeof(ngx_http_tfs_ds_readv2_response_tail_t)
 
 typedef enum
 {
@@ -206,8 +207,8 @@ typedef enum
 typedef enum
 {
     NGX_HTTP_TFS_UNLINK_DELETE = 0,
-    NGX_HTTP_TFS_UNLINK_UNDELETE = 2,	
-    NGX_HTTP_TFS_UNLINK_CONCEAL = 4,	
+    NGX_HTTP_TFS_UNLINK_UNDELETE = 2,
+    NGX_HTTP_TFS_UNLINK_CONCEAL = 4,
     NGX_HTTP_TFS_UNLINK_REVEAL = 6
 } ngx_http_tfs_unlink_type_e;
 
@@ -216,7 +217,7 @@ typedef enum
 {
     NGX_HTTP_TFS_FILE_NORMAL = 0,
     NGX_HTTP_TFS_FILE_DELETED = 1,
-    NGX_HTTP_TFS_FILE_INVALID = 2,	
+    NGX_HTTP_TFS_FILE_INVALID = 2,
     NGX_HTTP_TFS_FILE_CONCEAL = 4
 } ngx_http_tfs_file_status_e;
 
@@ -461,7 +462,9 @@ typedef struct {
 
 typedef struct {
     uint32_t                                 count; /* segment count */
-    uint64_t                                 size;  /* total size of all data segments */
+
+    /* total size of all data segments */
+    uint64_t                                 size;
     u_char                                   reserve[64];
 } NGX_PACKED ngx_http_tfs_segment_head_t;
 
@@ -496,8 +499,5 @@ typedef struct {
     uint64_t                                 offset;
     uint64_t                                 length;
 } ngx_http_tfs_file_hole_info_t;
-
-
-
 
 #endif  /* _NGX_HTTP_TFS_PROTOCOL_H_ */

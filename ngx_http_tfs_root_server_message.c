@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2010-2012 Alibaba Group Holding Limited
+ * Copyright (C) 2010-2013 Alibaba Group Holding Limited
  */
 
 
@@ -67,5 +67,3 @@ ngx_http_tfs_root_server_parse_message(ngx_http_tfs_t *t)
 
     return NGX_OK;
 }
-
-

@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2010-2012 Alibaba Group Holding Limited
+ * Copyright (C) 2010-2013 Alibaba Group Holding Limited
  */
 
 
@@ -60,31 +60,32 @@ typedef struct {
 
 
 typedef struct {
-    u_char                                 color;
-    u_char                                 dummy;
-    ngx_queue_t                            queue;
-    ngx_queue_t                            kp_queue;  /* for keep alive, fixed sequence */
+    u_char                             color;
+    u_char                             dummy;
+    ngx_queue_t                        queue;
+    /* for keep alive, fixed sequence */
+    ngx_queue_t                        kp_queue;
 
-    ngx_str_t                              appkey;
-    uint64_t                               app_id;
-    ngx_str_t                              session_id;
-    uint32_t                               rc_servers_count;
-    uint64_t                              *rc_servers;
+    ngx_str_t                          appkey;
+    uint64_t                           app_id;
+    ngx_str_t                          session_id;
+    uint32_t                           rc_servers_count;
+    uint64_t                          *rc_servers;
 
     /* logical cluster */
-    uint32_t                               logical_cluster_count;
-    ngx_http_tfs_logical_cluster_t         logical_clusters[NGX_HTTP_TFS_MAX_CLUSTER_COUNT];
+    uint32_t                           logical_cluster_count;
+    ngx_http_tfs_logical_cluster_t     logical_clusters[NGX_HTTP_TFS_MAX_CLUSTER_COUNT];
 
-    uint8_t                                need_duplicate;
+    uint8_t                            need_duplicate;
 
-    uint32_t                               report_interval;
-    uint64_t                               modify_time;
-    uint64_t                               meta_root_server;
-    ngx_str_t                              remote_block_cache_info;
+    uint32_t                           report_interval;
+    uint64_t                           modify_time;
+    uint64_t                           meta_root_server;
+    ngx_str_t                          remote_block_cache_info;
 
     /* for unlink & update */
-    uint8_t                                unlink_cluster_count;
-    ngx_http_tfs_cluster_group_info_t      unlink_clusters[NGX_HTTP_TFS_MAX_CLUSTER_COUNT];
+    uint8_t                            unlink_cluster_count;
+    ngx_http_tfs_cluster_group_info_t  unlink_clusters[NGX_HTTP_TFS_MAX_CLUSTER_COUNT];
 
     uint32_t                               use_remote_block_cache;
 } ngx_http_tfs_rcs_info_t;
@@ -94,7 +95,8 @@ typedef struct {
     ngx_rbtree_t                  rbtree;
     ngx_rbtree_node_t             sentinel;
     ngx_queue_t                   queue;
-    ngx_queue_t                   kp_queue;  /* for keep alive, fixed sequence */
+    /* for keep alive, fixed sequence */
+    ngx_queue_t                   kp_queue;
 } ngx_http_tfs_rc_shctx_t;
 
 
@@ -104,9 +106,10 @@ typedef struct {
 } ngx_http_tfs_rc_ctx_t;
 
 
-ngx_int_t ngx_http_tfs_rc_server_update(ngx_http_request_t *r, ngx_http_tfs_rc_ctx_t *t,
-    ngx_http_tfs_rcs_info_t *info);
-ngx_int_t ngx_http_tfs_rc_server_init_zone(ngx_shm_zone_t *shm_zone, void *data);
+ngx_int_t ngx_http_tfs_rc_server_update(ngx_http_request_t *r,
+    ngx_http_tfs_rc_ctx_t *t, ngx_http_tfs_rcs_info_t *info);
+ngx_int_t ngx_http_tfs_rc_server_init_zone(ngx_shm_zone_t *shm_zone,
+    void *data);
 void ngx_http_tfs_rc_server_expire(ngx_http_tfs_rc_ctx_t *ctx);
 ngx_http_tfs_rcs_info_t *ngx_http_tfs_rcs_lookup(ngx_http_request_t *r,
     ngx_http_tfs_rc_ctx_t *ctx, ngx_str_t appkey);
@@ -117,4 +120,3 @@ void ngx_http_tfs_rcs_set_group_info_by_addr(ngx_http_tfs_rcs_info_t *rc_info,
 
 
 #endif  /* _NGX_HTTP_TFS_RC_SERVER_INFO_H_INCLUDED_ */
-

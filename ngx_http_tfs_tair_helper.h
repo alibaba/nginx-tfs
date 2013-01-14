@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2010-2012 Alibaba Group Holding Limited
+ * Copyright (C) 2010-2013 Alibaba Group Holding Limited
  */
 
 
@@ -24,8 +24,8 @@ typedef struct {
 
 
 typedef struct {
-    ngx_str_t                    server[NGX_HTTP_TFS_TAIR_SERVER_ADDR_PART_COUNT];
-    ngx_int_t                    area;
+    ngx_str_t  server[NGX_HTTP_TFS_TAIR_SERVER_ADDR_PART_COUNT];
+    ngx_int_t  area;
 } ngx_http_tfs_tair_server_addr_info_t;
 
 #ifndef NGX_HTTP_TFS_USE_TAIR
@@ -53,14 +53,17 @@ typedef struct {
 } ngx_http_tair_key_value_t;
 
 typedef void (*ngx_http_tair_handler_pt)(ngx_int_t rc, void *data);
-typedef void (*ngx_http_tair_get_handler_pt)(ngx_http_tair_key_value_t *kv, ngx_int_t rc, void *data);
-typedef void (*ngx_http_tair_mget_handler_pt)(ngx_array_t *kvs, ngx_int_t rc, void *data);
+typedef void (*ngx_http_tair_get_handler_pt)(ngx_http_tair_key_value_t *kv,
+    ngx_int_t rc, void *data);
+typedef void (*ngx_http_tair_mget_handler_pt)(ngx_array_t *kvs, ngx_int_t rc,
+    void *data);
 
 #endif
 
 ngx_int_t ngx_http_tfs_tair_get_helper(ngx_http_tfs_tair_instance_t *instance,
     ngx_pool_t *pool, ngx_log_t *log,
-    ngx_http_tair_data_t *key, ngx_http_tair_get_handler_pt callback, void *data);
+    ngx_http_tair_data_t *key, ngx_http_tair_get_handler_pt callback,
+    void *data);
 
 ngx_int_t ngx_http_tfs_tair_mget_helper(ngx_http_tfs_tair_instance_t *instance,
     ngx_pool_t *pool, ngx_log_t *log,
@@ -79,7 +82,8 @@ ngx_http_tfs_tair_delete_helper(ngx_http_tfs_tair_instance_t *instance,
     ngx_array_t *keys, ngx_http_tair_handler_pt callback, void *data);
 
 ngx_int_t
-ngx_http_tfs_parse_tair_server_addr_info(ngx_http_tfs_tair_server_addr_info_t *info,
+ngx_http_tfs_parse_tair_server_addr_info(
+    ngx_http_tfs_tair_server_addr_info_t *info,
     u_char *addr, uint32_t len, void* pool, uint8_t shared_memory);
 
 

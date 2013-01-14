@@ -19,46 +19,134 @@
 
 4. make && make install
 
+配置
+====
+
+    http {
+        tfs_upstream tfs_rc {
+            server 127.0.0.1:6100;
+            type rcs;
+            rcs_zone name=tfs1 size=128M;
+            rcs_interface eth0;
+            rcs_heartbeat lock_file=/logs/lk.file interval=10s;
+        }
+        
+        server {
+              listen       7500;
+              server_name  localhost;
+
+              tfs_keepalive max_cached=100 bucket_count=10;
+              tfs_log "pipe:/usr/sbin/cronolog -p 30min /path/to/nginx/logs/cronolog/%Y/%m/%Y-%m-%d-%H-%M-tfs_access.log";
+
+              location / {
+                  tfs_pass tfs://tfs_rc;
+              }
+        }
+    }
+
 指令
 ====
 
-tfs_upstream
+server
 ------------
 
-**Syntax**： *tfs_upstream tfs_ups_addr*
+**Syntax**： *server address*
+
+**Default**： *none*
+
+**Context**： *tfs_upstream*
+
+指定后端TFS服务器的地址，当指令<i>type</i>为<i>rcs</i>时为RcServer的地址，如果为为<i>ns</i>时为NameServer的地址。此指令必须配置。例如:
+
+	server 10.0.0.1:8108;
+
+type
+----------------
+
+**Syntax**： *type [ns | rcs]*
+
+**Default**： *ns*
+
+**Context**： *tfs_upstream*
+
+设置server类型，类型只能为ns或者rcs，如果为ns,则指令<i>server</i>指定的地址为NameServer的地址，如果为rcs,则为RcServer的地址。如需使用自定义文件名功能请设置类型为rcs，使用自定义文件名功能需额外配置MetaServer和RootServer。
+
+rcs\_zone
+--------------
+
+**Syntax**： *rcs_zone name=n size=num*
+
+**Default**： *none*
+
+**Context**： *tfs_upstream*
+
+配置TFS应用在RcServer的配置信息。若开启RcServer（配置了<i>type rcs</i>），则必须配置此指令。配置此指令会在共享内存中缓存TFS应用在RcServer的配置信息，并可以通过指令<i>rcs_heartbeat</i>来和RcServer进行keepalive以保证应用的配置信息的及时更新。例如：
+
+	rcs_zone name=tfs1 size=128M;
+
+rcs\_heartbeat
+--------------
+
+**Syntax**： *rcs_heartbeat lock_file=/path/to/file interval=time*
+
+**Default**： *none*
+
+**Context**： *tfs_upstream*
+
+配置TFS应用和RcServer的keepalive，应用可通过此功能来和RcServer定期交互，以及时更新其配置信息。若开启RcServer功能（配置了<i>type rcs</i>），则必须配置此指令。例如：
+
+	rcs_heartbeat lock_file=/path/to/nginx/logs/lk.file interval=10s;
+
+rcs\_interface
+----------------
+
+**Syntax**： *rcs\_interface interface*
+
+**Default**： *none*
+
+**Context**： *tfs_upstream*
+
+配置TFS模块使用的网卡。若开启RcServer功能（配置了<i>type rcs</i>），则必须配置此指令。例如：
+
+	rcs_interface eth0;
+    
+tfs\_upstream
+----------------
+
+**Syntax**： *tfs\_upstream name {...}*
 
 **Default**： *none*
 
 **Context**： *http*
 
-指定后端TFS服务器的地址，当指令<i>tfs_enable_rcs</i>为<i>on</i>时为RcServer的地址，否则为NameServer的地址。此指令必须配置。例如:
+配置TFS模块的server信息,这个块包括上面几个命令。例如：
 
-	tfs_upstream 10.0.0.1:8108;
+    tfs_upstream tfs_rc {
+        server 127.0.0.1:6100;
+        type rcs;
+        rcs_zone name=tfs1 size=128M;
+        rcs_interface eth0;
+        rcs_heartbeat lock_file=/logs/lk.file interval=10s;
+    }
 
-tfs\_enable\_rcs
-----------------
-
-**Syntax**： *tfs_enable_rcs [on | off]*
-
-**Default**： *off*
-
-**Context**： *http, server*
-
-是否开启RcServer功能，此指令必须配置。如开启，则指令<i>tfs_upstream</i>指定的地址为RcServer的地址，否则为NameServer的地址。开启此指令需配置RcServer。如需使用自定义文件名功能请开启此指令，使用自定义文件名功能需额外配置MetaServer和RootServer。
-
+   
 tfs_pass
 --------
 
-**Syntax**： *tfs_pass enable=[1 | 0]*
+**Syntax**： *tfs_pass name*
 
 **Default**： *none*
 
 **Context**： *location*
 
-是否打开TFS模块功能，此指令为关键指令，决定请求是否由TFS模块处理，必须配置。需配置在“/” location。例如：
+是否打开TFS模块功能，此指令为关键指令，决定请求是否由TFS模块处理，必须配置。需要注意，这里不支持直接写ip地址或者域名，这里只支持指令<i>tfs_upstream name {...} </i>配置的upstream,并且必须以 tfs:// 开头。例如：
+
+
+	tfs_upstream tfs_rc {
+    };
 
 	location / {
-		tfs_pass enable=1;
+		tfs_pass tfs://tfs_rc;
 	}
 
 tfs_keepalive
@@ -87,49 +175,10 @@ tfs\_block\_cache\_zone
 
 	tfs_block_cache_zone size=256M;
 
-tfs\_rcs\_zone
---------------
-
-**Syntax**： *tfs_rcs_zone size=num*
-
-**Default**： *none*
-
-**Context**： *http*
-
-配置TFS应用在RcServer的配置信息。若开启RcServer功能（配置了<i>tfs_enable_rcs on</i>），则必须配置此指令。配置此指令会在共享内存中缓存TFS应用在RcServer的配置信息，并可以通过指令<i>tfs_poll_rcs</i>来和RcServer进行keepalive以保证应用的配置信息的及时更新。例如：
-
-	tfs_rcs_zone size=128M;
-
-tfs\_poll\_rcs
---------------
-
-**Syntax**： *tfs_poll_rcs lock_file=/path/to/file interval=time enable=[1 | 0]*
-
-**Default**： *none*
-
-**Context**： *http*
-
-配置TFS应用和RcServer的keepalive，应用可通过此功能来和RcServer定期交互，以及时更新其配置信息。若开启RcServer功能（配置了<i>tfs_enable_rcs on</i>），则必须配置此指令。例如：
-
-	tfs_poll_rcs lock_file=/path/to/nginx/logs/lk.file interval=10s enable=1;
-
-tfs\_net\_device
+tfs\_log
 ----------------
 
-**Syntax**： *tfs_net_device interface*
-
-**Default**： *none*
-
-**Context**： *http, server*
-
-配置TFS模块使用的网卡。若开启RcServer功能（配置了<i>tfs_enable_rcs on</i>），则必须配置此指令。例如：
-
-	tfs_net_device eth0;
-
-tfs\_tackle\_log
-----------------
-
-**Syntax**： *tfs_tackle_log path*
+**Syntax**： *tfs_log path*
 
 **Default**： *none*
 
@@ -137,7 +186,7 @@ tfs\_tackle\_log
 
 是否进行TFS访问记录。配置此指令会以固定格式将访问TFS的请求记录到指定log中，以便进行分析。具体格式参见代码。例如：
 
-	tfs_tackle_log "pipe:/usr/sbin/cronolog -p 30min /path/to/nginx/logs/cronolog/%Y/%m/%Y-%m-%d-%H-%M-tfs_access.log";
+	tfs_log "pipe:/usr/sbin/cronolog -p 30min /path/to/nginx/logs/cronolog/%Y/%m/%Y-%m-%d-%H-%M-tfs_access.log";
 
 注：cronolog支持依赖于tengine提供的扩展的日志模块。
 

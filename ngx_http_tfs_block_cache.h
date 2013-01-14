@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2010-2012 Alibaba Group Holding Limited
+ * Copyright (C) 2010-2013 Alibaba Group Holding Limited
  */
 
 
@@ -12,8 +12,8 @@
 #include <ngx_http_tfs_tair_helper.h>
 
 
-#define NGX_HTTP_TFS_BLOCK_CACHE_KEY_SIZE    sizeof(ngx_http_tfs_block_cache_key_t)
-#define NGX_HTTP_TFS_BLOCK_CACHE_ITEM_SIZE (offsetof(ngx_rbtree_node_t, color) + offsetof(ngx_http_tfs_block_cache_node_t, data) + 2 * sizeof(uint64_t))
+#define NGX_HTTP_TFS_BLOCK_CACHE_KEY_SIZE       \
+    sizeof(ngx_http_tfs_block_cache_key_t)
 
 #define NGX_HTTP_TFS_REMOTE_BLOCK_CACHE_VALUE_BASE_SIZE sizeof(uint32_t)
 
@@ -83,7 +83,8 @@ void ngx_http_tfs_block_cache_insert(ngx_http_tfs_block_cache_ctx_t *ctx,
 void ngx_http_tfs_block_cache_remove(ngx_http_tfs_block_cache_ctx_t *ctx,
     ngx_pool_t *pool, ngx_log_t *log, ngx_http_tfs_block_cache_key_t *key,
     uint8_t hit_status);
-ngx_int_t ngx_http_tfs_block_cache_batch_lookup(ngx_http_tfs_block_cache_ctx_t *ctx,
+ngx_int_t ngx_http_tfs_block_cache_batch_lookup(
+    ngx_http_tfs_block_cache_ctx_t *ctx,
     ngx_pool_t *pool, ngx_log_t *log, ngx_array_t* keys, ngx_array_t *kvs);
 void ngx_http_tfs_block_cache_batch_insert(ngx_http_tfs_block_cache_ctx_t *ctx,
     ngx_pool_t *pool, ngx_log_t *log, ngx_array_t* kvs);
