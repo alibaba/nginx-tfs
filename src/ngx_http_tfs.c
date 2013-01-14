@@ -1901,9 +1901,6 @@ ngx_http_tfs_misc_ctx_init(ngx_http_tfs_t *t, ngx_http_tfs_rcs_info_t *rc_info)
             /* update root server & meta table */
             t->loc_conf->meta_root_server = rc_info->meta_root_server;
             t->loc_conf->meta_server_table.version = 0;
-            ngx_http_tfs_peer_set_addr(t->pool,
-                             &t->tfs_peer_servers[NGX_HTTP_TFS_ROOT_SERVER],
-                             (ngx_http_tfs_inet_t *)&rc_info->meta_root_server);
         }
 
         /* next => root server */
@@ -1920,6 +1917,11 @@ ngx_http_tfs_misc_ctx_init(ngx_http_tfs_t *t, ngx_http_tfs_rcs_info_t *rc_info)
 
             ngx_http_tfs_peer_set_addr(t->pool,
                           &t->tfs_peer_servers[NGX_HTTP_TFS_META_SERVER], addr);
+
+        } else {
+            ngx_http_tfs_peer_set_addr(t->pool,
+                             &t->tfs_peer_servers[NGX_HTTP_TFS_ROOT_SERVER],
+                             (ngx_http_tfs_inet_t *)&rc_info->meta_root_server);
         }
     }
 
@@ -2052,6 +2054,8 @@ ngx_http_tfs_batch_process_start(ngx_http_tfs_t *t)
     for (i = 0; i < block_count; i++) {
         st = ngx_http_tfs_alloc_st(t);
         if (st == NULL) {
+            ngx_log_error(NGX_LOG_ERR, t->log, 0,
+                          "alloc st[%uD] failed.", i);
             return NGX_ERROR;
         }
 
@@ -2103,6 +2107,8 @@ ngx_http_tfs_batch_process_start(ngx_http_tfs_t *t)
         /* select data server */
         addr = ngx_http_tfs_select_data_server(st, st->file.segment_data);
         if (addr == NULL) {
+            ngx_log_error(NGX_LOG_ERR, t->log, 0,
+                          "st[%uD] select data server failed.", i);
             return NGX_ERROR;
         }
 
@@ -2115,11 +2121,15 @@ ngx_http_tfs_batch_process_start(ngx_http_tfs_t *t)
                        data_server->peer_addr_text);
 
         if (ngx_http_tfs_reinit(t->data, st) != NGX_OK) {
+            ngx_log_error(NGX_LOG_ERR, t->log, 0,
+                          "st[%uD] reinit failed.", i);
             return NGX_ERROR;
         }
 
         st->tfs_peer = ngx_http_tfs_select_peer(st);
         if (st->tfs_peer == NULL) {
+            ngx_log_error(NGX_LOG_ERR, t->log, 0,
+                          "st[%uD] select peer failed.", i);
             return NGX_ERROR;
         }
 
