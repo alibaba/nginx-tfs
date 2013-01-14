@@ -102,6 +102,7 @@ ngx_http_tfs_remote_block_cache_get_handler(ngx_http_tair_key_value_t *kv,
                 t->state += 1;
 
                 segment_data->cache_hit = NGX_HTTP_TFS_REMOTE_BLOCK_CACHE;
+                segment_data->block_info_src = NGX_HTTP_TFS_FROM_CACHE;
 
                 /* select data server */
                 addr = ngx_http_tfs_select_data_server(t, segment_data);

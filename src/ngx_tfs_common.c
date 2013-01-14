@@ -799,6 +799,8 @@ ngx_http_tfs_alloc_st(ngx_http_tfs_t *t)
     ngx_memcpy(&st->tfs_peer_servers[NGX_HTTP_TFS_DATA_SERVER],
                &t->tfs_peer_servers[NGX_HTTP_TFS_DATA_SERVER],
                sizeof(ngx_http_tfs_peer_connection_t));
+    st->tfs_peer_servers[NGX_HTTP_TFS_DATA_SERVER].peer.connection = NULL;
+
     b = &st->tfs_peer_servers[NGX_HTTP_TFS_DATA_SERVER].body_buffer;
     if (t->r_ctx.action.code == NGX_HTTP_TFS_ACTION_WRITE_FILE) {
         b->start = NULL;

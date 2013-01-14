@@ -466,9 +466,9 @@ ngx_http_tfs_parse_rc_info(ngx_http_tfs_rcs_info_t *rc_info_node,
             }
             ngx_memcpy(physical_cluster->cluster_id_text.data, p,
                        physical_cluster->cluster_id_text.len);
+            p += physical_cluster->cluster_id_text.len + 1;
             /* this cluster id need get from ns */
             physical_cluster->cluster_id = 0;
-            p += physical_cluster->cluster_id_text.len + 1;
 
             /* name server vip */
             len = *((uint32_t *) p);
