@@ -33,7 +33,7 @@ ngx_http_tfs_peer_init(ngx_http_tfs_t *t)
         return NGX_ERROR;
     }
 
-    name_server = &t->tfs_peer_servers[NGX_HTTP_TFS_RC_SERVER];
+    name_server = &t->tfs_peer_servers[NGX_HTTP_TFS_NAME_SERVER];
     data_server = &t->tfs_peer_servers[NGX_HTTP_TFS_DATA_SERVER];
     root_server = &t->tfs_peer_servers[NGX_HTTP_TFS_ROOT_SERVER];
     meta_server = &t->tfs_peer_servers[NGX_HTTP_TFS_META_SERVER];
