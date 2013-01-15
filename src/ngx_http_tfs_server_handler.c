@@ -142,6 +142,7 @@ ngx_http_tfs_process_ms(ngx_http_tfs_t *t)
                 }
                 t->last_dir_level = 0;
                 t->dir_lens[0] = t->last_file_path.len;
+                t->orig_action = t->r_ctx.action.code;
 
             } else {
                 parent_dir_len = ngx_http_tfs_get_parent_dir(&t->last_file_path,
@@ -150,7 +151,6 @@ ngx_http_tfs_process_ms(ngx_http_tfs_t *t)
             t->last_dir_level++;
             t->dir_lens[t->last_dir_level] = parent_dir_len;
             t->last_file_path.len = t->dir_lens[t->last_dir_level];
-            t->orig_action = t->r_ctx.action.code;
             /* temporarily modify */
             t->r_ctx.action.code = NGX_HTTP_TFS_ACTION_CREATE_DIR;
             return NGX_OK;
@@ -778,7 +778,7 @@ ngx_http_tfs_reset_segment_data(ngx_http_tfs_t *t)
     segment_data = &t->file.segment_data[t->file.segment_index];
     for (i = 0; i < block_count; i++, segment_data++) {
         segment_data->cache_hit = NGX_HTTP_TFS_NO_BLOCK_CACHE;
-        segment_data->block_info_src = NGX_HTTP_TFS_FROM_CACHE;
+        segment_data->block_info_src = NGX_HTTP_TFS_FROM_NONE;
         segment_data->block_info.ds_addrs = NULL;
         segment_data->ds_retry = 0;
         segment_data->ds_index = 0;
