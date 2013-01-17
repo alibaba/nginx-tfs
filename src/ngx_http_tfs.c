@@ -224,10 +224,8 @@ ngx_http_tfs_init(ngx_http_tfs_t *t)
                     return NGX_OK;
                 }
 
-                // TODO: use fine granularity mutex(per rc_info_node mutex)
-                //ngx_shmtx_lock(&rc_ctx->shpool->mutex);
+                /* TODO: use fine granularity mutex(per rc_info_node mutex) */
                 rc = ngx_http_tfs_misc_ctx_init(t, rc_info);
-                //ngx_shmtx_unlock(&rc_ctx->shpool->mutex);
                 /* wait for tair callback */
                 if (rc == NGX_DECLINED) {
                     return NGX_OK;
