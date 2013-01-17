@@ -453,7 +453,7 @@ ngx_http_tfs_create_batch_block_info_message(ngx_http_tfs_t *t)
 {
     size_t                                       size;
     uint32_t                                     block_count, real_block_count;
-    ngx_int_t                                    i, j;
+    ngx_uint_t                                   i, j;
     ngx_buf_t                                   *b;
     ngx_chain_t                                 *cl;
     ngx_http_tfs_segment_data_t                 *segment_data;
@@ -802,7 +802,8 @@ ngx_http_tfs_parse_batch_block_info_message(ngx_http_tfs_t *t,
                 {
                     continue;
                 }
-                //TODO: check this
+
+                /* TODO: check this */
                 segment_data[i].block_info = segment_data[j].block_info;
                 segment_data[i].block_info_src = NGX_HTTP_TFS_FROM_NS;
                 segment_data[i].ds_retry = 0;
