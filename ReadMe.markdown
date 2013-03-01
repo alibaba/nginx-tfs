@@ -30,7 +30,7 @@
             rcs_interface eth0;
             rcs_heartbeat lock_file=/logs/lk.file interval=10s;
         }
-        
+
         server {
               listen       7500;
               server_name  localhost;
@@ -109,7 +109,7 @@ rcs\_interface
 配置TFS模块使用的网卡。若开启RcServer功能（配置了<i>type rcs</i>），则必须配置此指令。例如：
 
 	rcs_interface eth0;
-    
+
 tfs\_upstream
 ----------------
 
@@ -129,7 +129,7 @@ tfs\_upstream
         rcs_heartbeat lock_file=/logs/lk.file interval=10s;
     }
 
-   
+
 tfs_pass
 --------
 
