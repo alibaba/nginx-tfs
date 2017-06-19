@@ -7,6 +7,7 @@
 ====
 
 * 这个模块实现了TFS的客户端，为TFS提供了RESTful API。TFS的全称是Taobao File System，是淘宝开源的一个分布式文件系统。
+* 将代码 https://github.com/alibaba/nginx-tfs/ 更新到 https://github.com/alibaba/tengine/tree/master/src/http/modules/tfs ，并做了适配 openresty-1.11.2.3 by Liqing Huang,2017/06/19
 
 编译安装
 =======

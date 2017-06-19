@@ -99,6 +99,7 @@ NGX_ADDON_DEPS="$NGX_ADDON_DEPS \
     $ngx_addon_dir/src/ngx_http_tfs_root_server_message.h \
     $ngx_addon_dir/src/ngx_http_tfs_meta_server_message.h \
     $ngx_addon_dir/src/ngx_http_tfs_peer_connection.h \
+    $ngx_addon_dir/src/ngx_http_tfs_serialization.h \
     $ngx_addon_dir/src/ngx_http_tfs_server_handler.h "
 
 
@@ -123,6 +124,7 @@ NGX_ADDON_SRCS="$NGX_ADDON_SRCS  \
     $ngx_addon_dir/src/ngx_http_tfs_root_server_message.c \
     $ngx_addon_dir/src/ngx_http_tfs_meta_server_message.c \
     $ngx_addon_dir/src/ngx_http_tfs_peer_connection.c \
+    $ngx_addon_dir/src/ngx_http_tfs_serialization.c \
     $ngx_addon_dir/src/ngx_http_tfs_server_handler.c "
 
 
