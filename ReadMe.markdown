@@ -14,11 +14,10 @@
 
 1. TFS模块使用了一个开源的JSON库来支持JSON，请先安装[yajl](http://lloyd.github.com/yajl/)-2.0.1。
 
-2. 下载[nginx](http://www.nginx.org/)或[tengine](http://tengine.taobao.org/)。
+2. 下载[openresty](https://openresty.org/en/download.html)
+3. `./configure --with-luajit --with-http_stub_status_module --with-pcre --with-pcre-jit  --with-ld-opt="-L /usr/local/lib" --add-module=/path/to/nginx-tfs`
 
-3. ./configure --add-module=/path/to/nginx-tfs
-
-4. make && make install
+4. gmake && gmake install
 
 配置
 ====
