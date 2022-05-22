@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2010-2013 Alibaba Group Holding Limited
+ * Copyright (C) 2010-2015 Alibaba Group Holding Limited
  */
 
 
@@ -194,14 +194,15 @@ ngx_int_t
 ngx_http_tfs_compute_buf_crc(ngx_http_tfs_crc_t *t_crc, ngx_buf_t *b,
     size_t size, ngx_log_t *log)
 {
-    u_char              *dst;
-    ssize_t              n;
+    u_char  *dst;
+    ssize_t  n;
 
     if (ngx_buf_in_memory(b)) {
         t_crc->crc = ngx_http_tfs_crc(t_crc->crc,
                                       (const char *) (b->pos), size);
         t_crc->data_crc = ngx_http_tfs_crc(t_crc->data_crc,
                                            (const char *) (b->pos), size);
+        b->last = b->pos + size;
         return NGX_OK;
     }
 
@@ -241,8 +242,8 @@ ngx_int_t
 ngx_http_tfs_peer_set_addr(ngx_pool_t *pool, ngx_http_tfs_peer_connection_t *p,
     ngx_http_tfs_inet_t *addr)
 {
-    ngx_peer_connection_t         *peer;
-    struct sockaddr_in            *in;
+    struct sockaddr_in     *in;
+    ngx_peer_connection_t  *peer;
 
     if (addr == NULL) {
         return NGX_ERROR;
@@ -314,9 +315,9 @@ ngx_http_tfs_murmur_hash(u_char *data, size_t len)
 ngx_int_t
 ngx_http_tfs_parse_inet(ngx_str_t *u, ngx_http_tfs_inet_t *addr)
 {
-    u_char              *port, *last;
-    size_t               len;
-    ngx_int_t            n;
+    u_char    *port, *last;
+    size_t     len;
+    ngx_int_t  n;
 
     last = u->data + u->len;
 
@@ -355,7 +356,7 @@ ngx_http_tfs_parse_inet(ngx_str_t *u, ngx_http_tfs_inet_t *addr)
 int32_t
 ngx_http_tfs_raw_fsname_hash(const u_char *str, const int32_t len)
 {
-    int32_t h, i;
+    int32_t  h, i;
 
     h = 0;
 
@@ -375,8 +376,8 @@ ngx_http_tfs_raw_fsname_hash(const u_char *str, const int32_t len)
 ngx_int_t
 ngx_http_tfs_get_local_ip(ngx_str_t device, struct sockaddr_in *addr)
 {
-    int                 sock;
-    struct ifreq        ifr;
+    int           sock;
+    struct ifreq  ifr;
 
     if((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         return NGX_ERROR;
@@ -403,7 +404,6 @@ ngx_http_tfs_copy_buf_chain(ngx_pool_t *pool, ngx_chain_t *in)
     ngx_int_t    len;
     ngx_buf_t   *buf;
     ngx_chain_t *cl;
-
 
     if (in->next == NULL) {
         return in->buf;
@@ -432,9 +432,9 @@ ngx_int_t
 ngx_http_tfs_sum_md5(ngx_chain_t *data, u_char *md5_final,
     ssize_t *data_len, ngx_log_t *log)
 {
-    u_char                       *buf;
-    ssize_t                       n, buf_size;
-    ngx_md5_t                     md5;
+    u_char    *buf;
+    ssize_t    n, buf_size;
+    ngx_md5_t  md5;
 
     ngx_md5_init(&md5);
 
@@ -487,12 +487,12 @@ ngx_http_tfs_time(u_char *buf, time_t t)
 
     ngx_gmtime(t, &tm);
 
-    return ngx_sprintf(buf, "%s, %02d %s %4d %02d:%02d:%02d UTC+0800",
+    return ngx_sprintf(buf, "%s, %02d %s %4d %02d:%02d:%02d GMT",
                        week[tm.ngx_tm_wday],
                        tm.ngx_tm_mday,
                        months[tm.ngx_tm_mon - 1],
                        tm.ngx_tm_year,
-                       tm.ngx_tm_hour + 8,
+                       tm.ngx_tm_hour,
                        tm.ngx_tm_min,
                        tm.ngx_tm_sec);
 }
@@ -501,9 +501,9 @@ ngx_http_tfs_time(u_char *buf, time_t t)
 ngx_int_t
 ngx_http_tfs_status_message(ngx_buf_t *b, ngx_str_t *action, ngx_log_t *log)
 {
-    int32_t                                   code, err_len;
-    ngx_str_t                                 err;
-    ngx_http_tfs_status_msg_t                *res;
+    int32_t                     code, err_len;
+    ngx_str_t                   err;
+    ngx_http_tfs_status_msg_t  *res;
 
     res = (ngx_http_tfs_status_msg_t *) b->pos;
     err.len = 0;
@@ -534,7 +534,7 @@ ngx_http_tfs_status_message(ngx_buf_t *b, ngx_str_t *action, ngx_log_t *log)
 ngx_int_t
 ngx_http_tfs_get_parent_dir(ngx_str_t *file_path, ngx_int_t *dir_level)
 {
-    ngx_uint_t         i, last_slash_pos;
+    ngx_uint_t  i, last_slash_pos;
 
     last_slash_pos = 0;
 
@@ -560,7 +560,7 @@ ngx_http_tfs_get_parent_dir(ngx_str_t *file_path, ngx_int_t *dir_level)
 ngx_int_t
 ngx_http_tfs_set_output_file_name(ngx_http_tfs_t *t)
 {
-    ngx_chain_t                 *cl, **ll;
+    ngx_chain_t  *cl, **ll;
 
     if (t->json_output == NULL) {
         t->json_output = ngx_http_tfs_json_init(t->log, t->pool);
@@ -574,7 +574,9 @@ ngx_http_tfs_set_output_file_name(ngx_http_tfs_t *t)
     }
 
     /* set final return file name */
-    t->r_ctx.fsname.cluster_id = t->file.cluster_id;
+    if (t->r_ctx.fsname.cluster_id == 0) {
+        t->r_ctx.fsname.cluster_id = t->file.cluster_id;
+    }
     t->file_name.len = NGX_HTTP_TFS_FILE_NAME_LEN;
     if (t->r_ctx.simple_name) {
         t->file_name.len += t->r_ctx.file_suffix.len;
@@ -585,9 +587,12 @@ ngx_http_tfs_set_output_file_name(ngx_http_tfs_t *t)
                                                 t->is_large_file,
                                                 t->r_ctx.simple_name),
                NGX_HTTP_TFS_FILE_NAME_LEN);
-    if (t->r_ctx.file_suffix.data != NULL) {
-        ngx_memcpy(t->file_name.data + NGX_HTTP_TFS_FILE_NAME_LEN,
-                   t->r_ctx.file_suffix.data, t->r_ctx.file_suffix.len);
+
+    if (t->r_ctx.simple_name) {
+        if (t->r_ctx.file_suffix.data != NULL) {
+            ngx_memcpy(t->file_name.data + NGX_HTTP_TFS_FILE_NAME_LEN,
+                       t->r_ctx.file_suffix.data, t->r_ctx.file_suffix.len);
+        }
     }
 
     /* set dup_file_name(put to tair) */
@@ -722,8 +727,8 @@ ngx_http_tfs_prealloc(ngx_pool_t *pool, void *p,
 uint64_t
 ngx_http_tfs_get_chain_buf_size(ngx_chain_t *data)
 {
-    uint64_t                       size;
-    ngx_chain_t                   *cl;
+    uint64_t      size;
+    ngx_chain_t  *cl;
 
     size = 0;
     cl = data;
@@ -758,8 +763,8 @@ ngx_http_tfs_dump_segment_data(ngx_http_tfs_segment_data_t *segment,
 ngx_http_tfs_t *
 ngx_http_tfs_alloc_st(ngx_http_tfs_t *t)
 {
-    ngx_buf_t                        *b;
-    ngx_http_tfs_t                   *st;
+    ngx_buf_t       *b;
+    ngx_http_tfs_t  *st;
 
     st = t->free_sts;
 
@@ -776,7 +781,8 @@ ngx_http_tfs_alloc_st(ngx_http_tfs_t *t)
     st->parent = t;
 
     /* each st should have independent send/recv buf/peer/out_bufs,
-     and we only care about data server and name server(retry need) */
+     * and we only care about data server and name server(retry need)
+     */
 
     /* recv(from upstream servers) bufs */
     st->recv_chain = ngx_http_tfs_alloc_chains(t->pool, 2);
@@ -803,15 +809,14 @@ ngx_http_tfs_alloc_st(ngx_http_tfs_t *t)
     ngx_memcpy(&st->tfs_peer_servers[NGX_HTTP_TFS_DATA_SERVER],
                &t->tfs_peer_servers[NGX_HTTP_TFS_DATA_SERVER],
                sizeof(ngx_http_tfs_peer_connection_t));
-    st->tfs_peer_servers[NGX_HTTP_TFS_DATA_SERVER].peer.connection = NULL;
-
     b = &st->tfs_peer_servers[NGX_HTTP_TFS_DATA_SERVER].body_buffer;
     if (t->r_ctx.action.code == NGX_HTTP_TFS_ACTION_WRITE_FILE) {
         b->start = NULL;
 
     } else if (t->r_ctx.action.code == NGX_HTTP_TFS_ACTION_READ_FILE){
         /* alloc buf that can hold all segment's data,
-         so that ngx_http_tfs_process_buf_overflow would not happen */
+         * so that ngx_http_tfs_process_buf_overflow would not happen
+         */
         b->start = ngx_palloc(t->pool, NGX_HTTP_TFS_MAX_FRAGMENT_SIZE);
         if (b->start == NULL) {
             return NULL;
@@ -832,3 +837,130 @@ ngx_http_tfs_alloc_st(ngx_http_tfs_t *t)
 }
 
 
+ngx_int_t
+ngx_http_tfs_get_content_type(u_char *data, ngx_str_t *type)
+{
+    if (memcmp(data, "GIF", 3) == 0) {
+        ngx_str_set(type, "image/gif");
+        return NGX_OK;
+    }
+
+    if (memcmp(data, "\xff\xd8\xff", 3) == 0) {
+        ngx_str_set(type, "image/jpeg");
+        return NGX_OK;
+    }
+
+    if (memcmp(data, "\x89\x50\x4e\x47\x0d\x0a\x1a\x0a", 8) == 0) {
+        ngx_str_set(type, "image/png");
+        return NGX_OK;
+    }
+
+    if ((memcmp(data, "CWS", 3) == 0)
+              ||(memcmp(data, "FWS", 3) == 0))
+    {
+        ngx_str_set(type, "application/x-shockwave-flash");
+        return NGX_OK;
+    }
+
+    if ((memcmp(data, "BM", 2) == 0)
+              ||(memcmp(data, "BA", 2) == 0)
+              ||(memcmp(data, "CI", 2) == 0)
+              ||(memcmp(data, "CP", 2) == 0)
+              ||(memcmp(data, "IC", 2) == 0)
+              ||(memcmp(data, "PI", 2) == 0))
+    {
+        ngx_str_set(type, "image/bmp");
+        return NGX_OK;
+    }
+
+    if ((memcmp(data, "\115\115\000\052", 4) == 0)
+            ||(memcmp(data, "\111\111\052\000", 4) == 0)
+            ||(memcmp(data, "\115\115\000\053\000\010\000\000", 8) == 0)
+            ||(memcmp(data, "\111\111\053\000\010\000\000\000", 8) == 0))
+    {
+        ngx_str_set(type, "image/tiff");
+        return NGX_OK;
+    }
+
+    return NGX_AGAIN;
+}
+
+
+ngx_msec_int_t
+ngx_http_tfs_get_request_time(ngx_http_tfs_t *t)
+{
+    ngx_time_t                *tp;
+    ngx_msec_int_t             ms;
+    struct timeval             tv;
+    ngx_http_request_t        *r;
+    ngx_http_core_loc_conf_t  *clcf;
+
+#if 0
+    r = t->data;
+    clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
+    if (clcf->request_time_cache) {
+        tp = ngx_timeofday();
+        ms = (ngx_msec_int_t)
+                 ((tp->sec - r->start_sec) * 1000 + (tp->msec - r->start_msec));
+    } else {
+#endif
+    {
+        ngx_gettimeofday(&tv);
+        ms = (tv.tv_sec - r->start_sec) * 1000
+                 + (tv.tv_usec / 1000 - r->start_msec);
+    }
+
+    ms = ngx_max(ms, 0);
+
+    return ms;
+}
+
+
+ngx_int_t
+ngx_chain_add_copy_with_buf(ngx_pool_t *pool, ngx_chain_t **chain, ngx_chain_t *in)
+{
+    ngx_buf_t    *b;
+    ngx_chain_t  *cl, **ll;
+
+    ll = chain;
+    for (cl = *chain; cl; cl = cl->next) {
+        ll = &cl->next;
+    }
+
+    while (in) {
+        b = ngx_alloc_buf(pool);
+        if (b == NULL) {
+            return NGX_ERROR;
+        }
+        ngx_memcpy(b, in->buf, sizeof(ngx_buf_t));
+        cl = ngx_alloc_chain_link(pool);
+        if (cl == NULL) {
+            return NGX_ERROR;
+        }
+        cl->buf = b;
+        *ll = cl;
+        ll = &cl->next;
+        in = in->next;
+    }
+
+    *ll = NULL;
+
+    return NGX_OK;
+}
+
+
+void
+ngx_http_tfs_wrap_raw_file_info(ngx_http_tfs_raw_file_info_t *file_info,
+    ngx_http_tfs_raw_file_stat_t *file_stat)
+{
+    if (file_info != NULL && file_stat != NULL) {
+        file_stat->id = file_info->id;
+        file_stat->offset = file_info->offset;
+        file_stat->size = file_info->size;
+        file_stat->u_size = file_info->u_size;
+        file_stat->modify_time = file_info->modify_time;
+        file_stat->create_time = file_info->create_time;
+        file_stat->flag = file_info->flag;
+        file_stat->crc = file_info->crc;
+    }
+}

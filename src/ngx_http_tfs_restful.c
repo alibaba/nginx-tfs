@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2010-2013 Alibaba Group Holding Limited
+ * Copyright (C) 2010-2015 Alibaba Group Holding Limited
  */
 
 
@@ -20,7 +20,7 @@ static ngx_int_t
 ngx_http_restful_parse_raw(ngx_http_request_t *r,
     ngx_http_tfs_restful_ctx_t *ctx, u_char *data)
 {
-    u_char         *p, ch, *start, *last, *meta_data;
+    u_char  *p, ch, *start, *last, *meta_data;
 
     enum {
         sw_appkey = 0,
@@ -70,7 +70,7 @@ ngx_http_restful_parse_raw(ngx_http_request_t *r,
     }
 
     if (r->method == NGX_HTTP_GET || r->method == NGX_HTTP_DELETE
-        || r->method == NGX_HTTP_PUT) {
+        || r->method == NGX_HTTP_PUT || r->method == NGX_HTTP_HEAD) {
         if (state == sw_appkey) {
             return NGX_ERROR;
         }
@@ -91,7 +91,6 @@ ngx_http_restful_parse_raw(ngx_http_request_t *r,
             return NGX_ERROR;
         }
 
-    /* reserved for rc keepalive */
     } else {
         if (state == sw_appkey) {
             ctx->appkey.len = p - start;
@@ -113,8 +112,8 @@ static ngx_int_t
 ngx_http_restful_parse_custom_name(ngx_http_request_t *r,
     ngx_http_tfs_restful_ctx_t *ctx, u_char *data)
 {
-    u_char         *p, ch, *start, *last, *appid, *meta_data;
-    ngx_int_t       rc;
+    u_char    *p, ch, *start, *last, *appid, *meta_data;
+    ngx_int_t  rc;
 
     enum {
         sw_appkey = 0,
@@ -243,14 +242,20 @@ ngx_http_restful_parse_custom_name(ngx_http_request_t *r,
             ctx->file_path_s.data = appid;
             ctx->file_path_s.len = 5;
             return NGX_OK;
-        } else {
-            return NGX_ERROR;
         }
+        return NGX_ERROR;
     }
 
     ctx->file_path_s.len = p - ctx->file_path_s.data;
     if (ctx->file_path_s.len < 1
         || ctx->file_path_s.len > NGX_HTTP_TFS_MAX_FILE_NAME_LEN)
+    {
+        return NGX_ERROR;
+    }
+
+    /* forbid file actions on "/" */
+    if (ctx->file_type == NGX_HTTP_TFS_CUSTOM_FT_FILE
+        && ctx->file_path_s.len == 1)
     {
         return NGX_ERROR;
     }
@@ -263,7 +268,7 @@ static ngx_int_t
 ngx_http_restful_parse_uri(ngx_http_request_t *r,
     ngx_http_tfs_restful_ctx_t *ctx)
 {
-    u_char         *p, ch, *last;
+    u_char  *p, ch, *last;
 
     enum {
         sw_start = 0,
@@ -329,8 +334,8 @@ static ngx_int_t
 ngx_http_restful_parse_action(ngx_http_request_t *r,
     ngx_http_tfs_restful_ctx_t *ctx)
 {
-    ngx_int_t       rc;
-    ngx_str_t       arg_value, file_path_d, file_temp_path;
+    ngx_int_t  rc;
+    ngx_str_t  arg_value, file_path_d, file_temp_path;
 
     switch(r->method) {
     case NGX_HTTP_GET:
@@ -401,10 +406,12 @@ ngx_http_restful_parse_action(ngx_http_request_t *r,
                           &file_path_d, &ctx->file_path_s);
 
             if (file_path_d.len < 1
-                || file_path_d.len > NGX_HTTP_TFS_MAX_FILE_NAME_LEN)
+                || file_path_d.len > NGX_HTTP_TFS_MAX_FILE_NAME_LEN
+                || ctx->file_path_s.len == 1)
             {
                 return NGX_HTTP_BAD_REQUEST;
             }
+
             if (ctx->file_path_s.len == file_path_d.len
                 && ngx_strncmp(ctx->file_path_s.data, file_path_d.data,
                                file_path_d.len) == 0)
@@ -418,6 +425,7 @@ ngx_http_restful_parse_action(ngx_http_request_t *r,
             if (ctx->file_type == NGX_HTTP_TFS_CUSTOM_FT_FILE) {
                 ctx->action.code = NGX_HTTP_TFS_ACTION_MOVE_FILE;
                 ngx_str_set(&ctx->action.msg, "move_file");
+
             } else {
                 ctx->action.code = NGX_HTTP_TFS_ACTION_MOVE_DIR;
                 ngx_str_set(&ctx->action.msg, "move_dir");
@@ -429,6 +437,11 @@ ngx_http_restful_parse_action(ngx_http_request_t *r,
                 ngx_str_set(&ctx->action.msg, "create_file");
 
             } else {
+                /* forbid create "/" */
+                if (ctx->file_path_s.len == 1) {
+                    return NGX_HTTP_BAD_REQUEST;
+                }
+
                 ctx->action.code = NGX_HTTP_TFS_ACTION_CREATE_DIR;
                 ngx_str_set(&ctx->action.msg, "create_dir");
             }
@@ -457,12 +470,12 @@ ngx_http_restful_parse_action(ngx_http_request_t *r,
                 }
 
             } else {
-                ctx->offset = -1; /* no specify offset, append by default */
+                /* no specify offset, append by default */
+                ctx->offset = NGX_HTTP_TFS_APPEND_OFFSET;
             }
             return NGX_OK;
         }
-        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                      "put method is forbid in dir");
+        /* forbid put aciont on dir */
         return NGX_ERROR;
     case NGX_HTTP_DELETE:
         if (ctx->file_type == NGX_HTTP_TFS_CUSTOM_FT_FILE) {
@@ -473,6 +486,12 @@ ngx_http_restful_parse_action(ngx_http_request_t *r,
 
             return NGX_OK;
         }
+
+        /* forbid delete "/" */
+        if (ctx->file_path_s.len == 1) {
+            return NGX_HTTP_BAD_REQUEST;
+        }
+
         ctx->action.code = NGX_HTTP_TFS_ACTION_REMOVE_DIR;
         ngx_str_set(&ctx->action.msg, "remove_dir");
         break;
@@ -497,12 +516,11 @@ static ngx_int_t
 ngx_http_restful_parse_action_raw(ngx_http_request_t *r,
     ngx_http_tfs_restful_ctx_t *ctx)
 {
-    ngx_int_t       rc;
-    ngx_str_t       arg_value;
+    ngx_int_t  rc;
+    ngx_str_t  arg_value;
 
     switch(r->method) {
     case NGX_HTTP_GET:
-
         if (ngx_http_arg(r, (u_char *) "suffix", 6, &arg_value) == NGX_OK) {
             ctx->file_suffix = arg_value;
         }
@@ -557,8 +575,8 @@ ngx_http_restful_parse_action_raw(ngx_http_request_t *r,
 
             ctx->size = NGX_HTTP_TFS_MAX_SIZE;
         }
+        break;
 
-        return NGX_OK;
     case NGX_HTTP_POST:
         ctx->action.code = NGX_HTTP_TFS_ACTION_WRITE_FILE;
         if (ngx_http_arg(r, (u_char *) "suffix", 6, &arg_value) == NGX_OK) {
@@ -624,7 +642,7 @@ ngx_http_restful_parse_action_raw(ngx_http_request_t *r,
         }
 
         ngx_str_set(&ctx->action.msg, "write_file");
-        return NGX_OK;
+        break;
 
     case NGX_HTTP_DELETE:
         ctx->action.code = NGX_HTTP_TFS_ACTION_REMOVE_FILE;
@@ -679,14 +697,41 @@ ngx_http_restful_parse_action_raw(ngx_http_request_t *r,
 
         /* large file not support UNDELETE */
         if ((ctx->fsname.file_type == NGX_HTTP_TFS_LARGE_FILE_TYPE)
-            && ctx->unlink_type == 2)
+            && ctx->unlink_type == NGX_HTTP_TFS_UNLINK_UNDELETE)
         {
             return NGX_HTTP_BAD_REQUEST;
         }
+        break;
 
-        return NGX_OK;
     case NGX_HTTP_HEAD:
-        return NGX_HTTP_BAD_REQUEST;
+        if (ngx_http_arg(r, (u_char *) "suffix", 6, &arg_value) == NGX_OK) {
+            ctx->file_suffix = arg_value;
+        }
+
+        rc = ngx_http_tfs_raw_fsname_parse(&ctx->file_path_s, &ctx->file_suffix,
+                                           &ctx->fsname);
+        if (rc != NGX_OK) {
+            return NGX_HTTP_BAD_REQUEST;
+        }
+
+        if (ngx_http_arg(r, (u_char *) "type", 4, &arg_value) == NGX_OK) {
+            if (arg_value.len != 1) {
+                return NGX_HTTP_BAD_REQUEST;
+            }
+            ctx->read_stat_type = ngx_atoi(arg_value.data, arg_value.len);
+            /* normal_read/stat(0) or force_read/stat(1) */
+            if (ctx->read_stat_type == NGX_ERROR
+                || (ctx->read_stat_type != NGX_HTTP_TFS_READ_STAT_NORMAL
+                    && ctx->read_stat_type != NGX_HTTP_TFS_READ_STAT_FORCE))
+            {
+                return NGX_HTTP_BAD_REQUEST;
+            }
+        }
+        ctx->action.code = NGX_HTTP_TFS_ACTION_STAT_FILE;
+        ngx_str_set(&ctx->action.msg, "stat_file");
+        ctx->chk_exist = NGX_HTTP_TFS_YES;
+        break;
+
     case NGX_HTTP_PUT:
         ctx->action.code = NGX_HTTP_TFS_ACTION_WRITE_FILE;
         if (ngx_http_arg(r, (u_char *) "suffix", 6, &arg_value) == NGX_OK) {
@@ -712,6 +757,11 @@ ngx_http_restful_parse_action_raw(ngx_http_request_t *r,
             return NGX_HTTP_BAD_REQUEST;
         }
 
+        /* large file not support update */
+        if (ngx_http_arg(r, (u_char *) "large_file", 10, &arg_value) == NGX_OK) {
+            return NGX_HTTP_BAD_REQUEST;
+        }
+
         rc = ngx_http_tfs_raw_fsname_parse(&ctx->file_path_s, &ctx->file_suffix,
                                            &ctx->fsname);
         /* large file not support update */
@@ -721,10 +771,12 @@ ngx_http_restful_parse_action_raw(ngx_http_request_t *r,
             return NGX_HTTP_BAD_REQUEST;
         }
 
+        ctx->is_raw_update = NGX_HTTP_TFS_YES;
         ngx_str_set(&ctx->action.msg, "write_file");
-        return NGX_OK;
+        break;
+
     default:
-        return NGX_ERROR;
+        return NGX_HTTP_BAD_REQUEST;
     }
 
     return NGX_OK;
@@ -734,7 +786,7 @@ ngx_http_restful_parse_action_raw(ngx_http_request_t *r,
 ngx_int_t
 ngx_http_restful_parse(ngx_http_request_t *r, ngx_http_tfs_restful_ctx_t *ctx)
 {
-    ngx_int_t            rc;
+    ngx_int_t  rc;
 
     rc = ngx_http_restful_parse_uri(r, ctx);
     if (rc == NGX_ERROR) {

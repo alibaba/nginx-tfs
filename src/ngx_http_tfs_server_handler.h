@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2010-2013 Alibaba Group Holding Limited
+ * Copyright (C) 2010-2015 Alibaba Group Holding Limited
  */
 
 
@@ -43,5 +43,5 @@ ngx_int_t ngx_http_tfs_retry_ds(ngx_http_tfs_t *t);
 ngx_int_t ngx_http_tfs_retry_ns(ngx_http_tfs_t *t);
 
 
-#endif  /*  */
+#endif  /* _NGX_HTTP_TFS_SERVER_HANDLER_H_INCLUDED_ */
 
